@@ -1,0 +1,25 @@
+{
+  "name": "sparking",
+  "version": "1.0.0",
+  "description": "This project for Parking Management System",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vdt040499/sParking.git"
+  },
+  "author": "sParking Team",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vdt040499/sParking/issues"
+  },
+  "homepage": "https://github.com/vdt040499/sParking#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongoose": "^5.9.12",
+    "nodemon": "^2.0.3"
+  }
+}
