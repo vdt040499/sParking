@@ -1,11 +1,14 @@
 //Defines Depenences
 const express = require('express');
 const mongoose = require('mongoose');
+const morgan = require('morgan');
+const session = require('express-session');
 
 //Content
 const app = express();
 
 //Import file routes config ./api/routes/
+const userRoutes = require('./api/routes/user.route')
 
 //Connect to DB
 
@@ -40,18 +43,11 @@ mongoose.connect('mongodb://localhost:27017/sParking',
 mongoose.Promise = global.Promise;
 
 //Middlewares
+app.use(morgan('dev'));
+app.use(express.urlencoded({extended: true}));
+app.use(express.json());
 app.use('/uploads', express.static('uploads'));
-app.use((req,res,next)=>{
-    res.header('Access-Control-Allow-Origin','*');
-    res.header('Access-Control-Allow-Headers','Origin, X-Requested-With, Content-Type, Accept, Authorization');
-
-    if (req.method === 'OPTIONS'){
-        res.header('Access-Control-Allow-Methods', 'PUT, POST,PATCH, DELETE, GET');
-        return res.status(200).json({});
-    }
-    next();
-});
-
+app.use(session({ secret: 'session secret key' }));
 app.use((req,res,next)=>{
     res.header('Access-Control-Allow-Origin','*');
     res.header('Access-Control-Allow-Headers','Origin, X-Requested-With, Content-Type, Accept, Authorization');
@@ -64,6 +60,7 @@ app.use((req,res,next)=>{
 });
 
 //Routes
+app.use('/users', userRoutes);
 
 //Catch 404 errors and forward then to error handler
 app.use((req,res,next)=>{

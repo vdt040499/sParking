@@ -1,0 +1,9 @@
+{
+    "env": {
+        "MONGO_ATLAS_PW": "sparking",
+        "JWT_KEY": "sparking",
+        "GMAIL_USER": "sparkingsystem@gmail.com",
+        "GMAIL_PASSWORD": "s1Parking5*"
+        
+    }
+}
