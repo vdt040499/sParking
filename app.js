@@ -8,7 +8,8 @@ const session = require('express-session');
 const app = express();
 
 //Import file routes config ./api/routes/
-const userRoutes = require('./api/routes/user.route')
+const userRoutes = require('./api/routes/user.route');
+const ticketRoutes = require('./api/routes/ticket.route');
 
 //Connect to DB
 
@@ -61,6 +62,7 @@ app.use((req,res,next)=>{
 
 //Routes
 app.use('/users', userRoutes);
+app.use('/tickets', ticketRoutes);
 
 //Catch 404 errors and forward then to error handler
 app.use((req,res,next)=>{
