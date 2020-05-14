@@ -4,12 +4,12 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 
 const storageForCreate = multer.diskStorage({
-    destination: function(req, file, cb){
-        cb(null, 'uploads/createticket');
-    },
-    filename: function(req, file, cb){
-        cb(null, file.fieldname + '-' + Date.now() + '.jpg');
-    }
+  destination: function(req, file, cb){
+      cb(null, 'uploads/createticket');
+  },
+  filename: function(req, file, cb){
+      cb(null, file.fieldname + '-' + Date.now() + '.jpg');
+  }
 });
 
 const storageForPay = multer.diskStorage({
