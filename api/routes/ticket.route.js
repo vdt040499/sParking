@@ -3,24 +3,22 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const multer = require('multer');
 
-const storage = multer.diskStorage({
+const storageForCreate = multer.diskStorage({
     destination: function(req, file, cb){
-        cb(null, 'uploads/');
+        cb(null, 'uploads/createticket');
     },
     filename: function(req, file, cb){
         cb(null, file.fieldname + '-' + Date.now() + '.jpg');
-        //cb(null, new Date().toISOString() + file.originalname);
     }
+});
 
-    // destination: 'uploads/',
-    // filename: function(req, file, cb) {
-    //   return crypto.pseudoRandomBytes(16, function(err, raw) {
-    //     if (err) {
-    //       return cb(err);
-    //     }
-    //     return cb(null, "" + (raw.toString('hex')) + (path.extname(file.originalname)));
-    //   });
-    // }
+const storageForPay = multer.diskStorage({
+  destination: function(req, file, cb){
+      cb(null, 'uploads/payticket');
+  },
+  filename: function(req, file, cb){
+      cb(null, file.fieldname + '-' + Date.now() + '.jpg');
+  }
 });
 
 const fileFilter = (req, file, cb) => {
@@ -32,13 +30,13 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 1024 * 1024 * 5
-  },
-  fileFilter: fileFilter
-});
+// const upload = multer({
+//   storage: storage,
+//   limits: {
+//     fileSize: 1024 * 1024 * 5
+//   },
+//   fileFilter: fileFilter
+// });
 
 const Ticket = require('../models/ticket.model');
 const User = require('../models/user.model');
@@ -46,6 +44,7 @@ const User = require('../models/user.model');
 const TicketsController = require('../controllers/ticket.controller');
 
 router.get('/getticket', TicketsController.getticket);
-router.post('/createticket', multer({ storage: storage }).single('plateImage'), TicketsController.createticket);
+router.post('/createticket', multer({ storage: storageForCreate }).single('plateForCreate'), TicketsController.createticket);
+router.post('/payticket/:ticketId/:userId', multer({ storage: storageForPay }).single('plateForPay'), TicketsController.payTicket);
 
 module.exports = router;
