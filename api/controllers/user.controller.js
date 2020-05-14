@@ -9,14 +9,14 @@ const nodemailer = require('nodemailer');
 const User = require('../models/user.model');
 
 
-exports.signup = async(req, res) => {
-    try{
+exports.signup = async (req, res) => {
+    try {
         const user = await User.find({ email: req.body.email });
-        if(user.length >=1){
+        if (user.length >= 1) {
             res.status(409).json({
                 message: 'User exists'
             });
-        }else{
+        } else {
             const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
             const user = new User({
@@ -38,11 +38,11 @@ exports.signup = async(req, res) => {
                 user: user
             });
         }
-    }catch(err){
+    } catch (err) {
         res.status(500).json({
             error: err
         })
-    } 
+    }
 }
 
 exports.uploadImage = async (req, res) => {
@@ -63,20 +63,20 @@ exports.uploadImage = async (req, res) => {
     }
 }
 
-exports.login = async(req, res) => {
+exports.login = async (req, res) => {
     try {
         const user = await User.findOne({ email: req.body.email });
-        if(!user){
+        if (!user) {
             res.status(400).json({
                 message: 'User does not exist'
             });
-        }else{
+        } else {
             const passwordValid = await bcrypt.compare(req.body.password, user.password); //true or false
-            if(!passwordValid){
+            if (!passwordValid) {
                 res.status(500).json({
                     message: 'Wrong password'
                 });
-            }else{
+            } else {
                 const token = jwt.sign(
                     {
                         email: user.email,
@@ -97,7 +97,7 @@ exports.login = async(req, res) => {
                 })
             }
         }
-    }catch(err){
+    } catch (err) {
         res.status(500).json({
             error: err
         })
@@ -106,44 +106,204 @@ exports.login = async(req, res) => {
 
 exports.update = async (req, res) => {
     try {
+        // tìm kiếm acc bằng userId vì userId là duy nhất (unique)
         const user = await User.findById(req.params.userId);
 
+        // tìm trong danh sách những acc có trong database, email người nhập để thay đổi có trùng với một acc nào đó không?
         const userexist = await User.find({
-            email: req.body.email
-        });
+            email: req.body.email,
 
+        });
+        //các trường hợp có thể có
+        // trường hợp email trống (empty) tức là người k thay đổi email
         if (req.body.email == "") {
-            user.username = req.body.username;
-            user.save();
-            return res.status(200).json({
-                message: 'Updates Successfully'
-            });
-        } else if (req.body.username == "") {
-            if (userexist.length >= 1) {
-                return res.status(409).json({
-                    message: 'Mail exists'
-                })
+            //kiểm tra tiếp username
+            // nếu username trống (empty) tức là người dùng không muốn thay đổi username
+            if (req.body.username == "") {
+                // kiểm tra tiếp ID (mssv)
+                // nếu ID trống (empty) tức là người dùng không muốn thay đổi ID
+                if (req.body.ID == "") {
+                    // kiểm tra tiếp position
+                    // nếu position trống (empty) tức là người dùng không muốn thay đổi position
+                    // lỗi: người dùng có thể thay đổi ít nhất 1 thuộc tính nào đó, không thể thay đổi rỗng
+                    if (req.body.position == "") {
+                        return res.status(400).json({
+                            message: 'You must fill at least one field'
+                        });
+                    } else {
+                        // ngược lại nếu position không trống
+                        // lỗi: nếu thay đổi position thì phải thay đổi ID
+                        return res.status(501).json({
+                            message: 'If you want to change position , you must change ID more'
+                        });
+                    }
+
+                } else {
+                    //ngược lại nếu ID không trống
+                    // kiểm tra tiếp position
+                    //nếu position trống
+                    //lỗi: nếu thay đổi ID thì phải thay đổi position
+                    if (req.body.position == "") {
+                        return res.status(501).json({
+                            message: 'If you want to change ID , you must change position more'
+                        });
+                    } else {
+                        //ngược lại nếu cả ID và position đều không trống
+                        //ID và position của user tương ứng sẽ đc thay đổi như thông tin người dùng request
+                        user.ID = req.body.ID;
+                        user.position = req.body.position;
+                        user.save();
+                        // xuất thông báo thay đổi thành công
+                        return res.status(200).json({
+                            message: 'Updates Successfully'
+                        });
+                    }
+                }
             } else {
-                user.email = req.body.email;
-                user.save();
-                return res.status(200).json({
-                    message: 'Updates Successfully'
-                });
+                // ngược lại nếu username không trống (empty)
+                //kiểm tra tiếp ID
+                //nếu ID rỗng
+                if (req.body.ID == "") {
+                    // kiểm tra tiếp position
+                    // nếu position rỗng
+                    if (req.body.position == "") {
+                        //username của user tương ứng sẽ đc thay đổi như thông tin người dùng request
+                        user.username = req.body.username;
+                        user.save();
+                        // xuất thông báo thay đổi thành công
+                        return res.status(200).json({
+                            message: 'Updates Successfully'
+                        });
+                    } else {
+                        // ngược lại nếu position không rỗng
+                        // chỉ username đc thay đổi
+                        return res.status(400).json({
+                            message: 'If you want to change position , you must change ID more'
+                        });
+                    }
+                } else {
+                    // ngược lại nếu ID không rỗng
+                    // kiểm tra tiếp position
+                    // nếu position rỗng
+                    if (req.body.position == "") {
+                        return res.status(400).json({
+                            message: 'If you want to change ID , you must change position more '
+                        });
+                    } else {
+                        // ngược lại nếu position không rỗng
+                        // thay đổi username, ID,position
+                        user.username = req.body.username;
+                        user.ID = req.body.ID;
+                        user.position = req.body.position;
+                        user.save();
+                        return res.status(200).json({
+                            message: 'Updates Successfully'
+                        });
+                    }
+                }
             }
         } else {
+            // ngược lại nếu email không rỗng
+            // kiểm tra nếu email thay đổi trùng với email có trong database thì lỗi
             if (userexist.length >= 1) {
                 return res.status(409).json({
                     message: 'Mail exists'
                 })
             } else {
-                user.username = req.body.username;
-                user.email = req.body.email;
-                user.save();
+                // ngược lại nếu email không trùng
+                // kiểm tra username
+                // nếu username rỗng
+                if (req.body.username == "") {
+                    //kiểm tra tiếp ID
+                    // nếu ID rỗng
+                    if (req.body.ID == "") {
+                        // kiểm tra tiếp position
+                        // nếu position rỗng
+                        // chỉ thay đổi email
+                        if (req.body.position == "") {
+                            user.email = req.body.email;
+                            user.save();
+                            return res.status(200).json({
+                                message: 'Updates Successfully'
+                            });
+                        } else {
+                            //ngược lại nếu position không rỗng
+                            // chỉ thay đổi email
+                            return res.status(400).json({
+                                message: 'If you want to change position, you must change ID more'
+                            });
+                        }
 
-                return res.status(200).json({
-                    message: 'Updates Successfully'
-                });
+                    } else {
+                        // ngược lại nếu ID không rỗng
+                        //kiểm tra tiếp position
+                        // nếu position rỗng
+                        // chỉ thay đổi email
+                        if (req.body.position == "") {
+                            return res.status(400).json({
+                                message: 'If you want to change ID, you must change position more'
+                            });
+                        } else {
+                            // ngược lại nếu position không rỗng
+                            // thay đổi email, ID, position
+                            user.email = req.body.email;
+                            user.ID = req.body.ID;
+                            user.position = req.body.position;
+                            user.save();
+                            return res.status(200).json({
+                                message: 'Updates Successfully'
+                            });
+                        }
+                    }
+                } else {
+                    // ngược lại nếu username không  rỗng
+                    // kiểm tra tiếp ID
+                    //nesu ID rỗng
+                    if (req.body.ID == "") {
+                        //kiểm tra tiếp position
+                        //nếu position rỗng
+                        // chỉ thay đổi email, username
+                        if (req.body.position == "") {
+                            user.email = req.body.email;
+                            user.username = req.body.username;
+                            user.save();
+                            return res.status(200).json({
+                                message: 'Updates Successfully'
+                            });
+                        } else {
+                            // ngược lại nếu position không rỗng
+                            // chỉ thay đổi email, username
+                            return res.status(400).json({
+                                message: 'If you want to change position, you must change ID more'
+                            });
+                        }
+
+                    } else {
+                        // ngược lại nếu ID không rỗng 
+                        //kiểm tra tiếp position
+                        //nếu position rỗng
+                        // chỉ thay đổi email, username
+                        if (req.body.position == "") {
+                            return res.status(400).json({
+                                message: 'If you want to change ID, you must change position more'
+                            });
+                        } else {
+                            // ngược lại nếu position không rỗng
+                            // thay đổi email, username, ID, position
+                            user.email = req.body.email;
+                            user.username = req.body.username;
+                            user.ID = req.body.ID;
+                            user.position = req.body.position;
+                            user.save();
+                            return res.status(200).json({
+                                message: 'Updates Successfully'
+                            });
+                        }
+                    }
+                }
+
             }
+
         }
     } catch (err) {
         console.log(err);
@@ -153,59 +313,59 @@ exports.update = async (req, res) => {
     }
 }
 
-exports.deleteUser = async(req, res) => {
+exports.deleteUser = async (req, res) => {
     try {
-        const deletedUser = await User.deleteOne({_id: req.params.userId}); // { n: 1, ok: 1, deletedCount: 1 }
+        const deletedUser = await User.deleteOne({ _id: req.params.userId }); // { n: 1, ok: 1, deletedCount: 1 }
         console.log(deletedUser);
-        if(deletedUser.deletedCount === 0){
+        if (deletedUser.deletedCount === 0) {
             res.status(400).json({
                 message: 'User does not exists'
             });
-        }else{
+        } else {
             res.status(200).json({
                 message: 'Deleted User'
             });
         }
-    }catch(err){
+    } catch (err) {
         res.status(500).json({
             error: err
         })
     }
 }
 
-exports.changePass = async(req, res) => {
-    try{
+exports.changePass = async (req, res) => {
+    try {
         const user = await User.findById(req.params.userId);
-        if(req.body.oldpass === '' || req.body.newpass === '' || req.body.reenterpass === ''){
+        if (req.body.oldpass === '' || req.body.newpass === '' || req.body.reenterpass === '') {
             res.status(400).json({
                 message: 'All retries must fill out'
             });
         }
-        else if(req.body.oldpass === req.body.newpass){
+        else if (req.body.oldpass === req.body.newpass) {
             res.status(400).json({
                 message: 'New and old password are the same'
             });
-        }else if(req.body.newpass !== req.body.reenternewpass){
+        } else if (req.body.newpass !== req.body.reenternewpass) {
             res.status(400).json({
                 message: 'Both entries for new password must match'
             })
-        }else if(await bcrypt.compare(req.body.oldpass, user.password)){
+        } else if (await bcrypt.compare(req.body.oldpass, user.password)) {
             res.status(200).json({
                 message: 'Change password successfully'
             })
-        }else{
+        } else {
             res.status(401).json({
                 message: 'Password does not match'
             })
         }
-    }catch(err){
+    } catch (err) {
         res.status(500).json({
             error: err
         })
     }
 }
 
-exports.forgotPass = async(req, res) => {
+exports.forgotPass = async (req, res) => {
     async.waterfall([
         function (done) {
             crypto.randomBytes(3, (err, buf) => {
@@ -265,7 +425,7 @@ exports.forgotPass = async(req, res) => {
     ]);
 }
 
-exports.forgotPassCheck = async(req, res) => {
+exports.forgotPassCheck = async (req, res) => {
     User.findOne({ email: req.body.email })
         .then(user => {
             if (user.resetToken === undefined || user.resetTokenExpires === undefined) {
@@ -306,7 +466,7 @@ exports.forgotPassCheck = async(req, res) => {
         });
 }
 
-exports.getUser = async(req, res) => {
+exports.getUser = async (req, res) => {
     const user = await User.findById(req.params.userId);
 
     return res.status(200).json({

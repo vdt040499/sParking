@@ -41,7 +41,7 @@ router.post('/:userId/uploadimage', upload.single('userImage'), UsersController.
 
 router.post('/login', UsersController.login);
 
-router.post('/:userId/updateuser', checkAuth, UsersController.update);
+router.post('/:userId/updateuser', UsersController.update);
 
 router.delete('/:userId', checkAuth, UsersController.deleteUser);
 
