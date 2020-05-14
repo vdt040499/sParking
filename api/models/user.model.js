@@ -15,6 +15,7 @@ const userSchema = mongoose.Schema({
         match: /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/
     },
     userImage: { type: String },
+    plates: [{type: String}],
     tickets: {type: mongoose.Schema.Types.ObjectId, ref: 'Ticket'},
     resetToken: { type: String, required: false },
     resetTokenExpires: { type: Date, required: false },  

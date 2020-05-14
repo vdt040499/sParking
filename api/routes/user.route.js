@@ -35,23 +35,23 @@ const upload = multer({
 
 router.post('/signup', multer({
     storage: storage
-}).single('userImage'), UsersController.users_signup);
+}).single('userImage'), UsersController.signup);
 
-router.post('/:userId/uploadimage', upload.single('userImage'), UsersController.users_uploadImage);
+router.post('/:userId/uploadimage', upload.single('userImage'), UsersController.uploadImage);
 
-router.post('/login', UsersController.users_login);
+router.post('/login', UsersController.login);
 
-router.post('/:userId/updateuser', checkAuth, UsersController.users_update);
+router.post('/:userId/updateuser', checkAuth, UsersController.update);
 
-router.delete('/:userId', checkAuth, UsersController.users_delete_user);
+router.delete('/:userId', checkAuth, UsersController.deleteUser);
 
-router.post('/changepass', checkAuth, UsersController.users_changepass);
+router.post('/changepass', checkAuth, UsersController.changePass);
 
-router.post('/forgotpassword', UsersController.users_forgotpass);
+router.post('/forgotpassword', UsersController.forgotPass);
 
-router.post('/forgotpasswordcheck', UsersController.users_forgotpasscheck);
+router.post('/forgotpasswordcheck', UsersController.forgotPassCheck);
 
-router.get('/getuser/:userId', UsersController.users_getuser);
+router.get('/getuser/:userId', UsersController.getUser);
 
 
 

@@ -9,54 +9,43 @@ const nodemailer = require('nodemailer');
 const User = require('../models/user.model');
 
 
-exports.users_signup = async (req, res, next) => {
-    User.find({ email: req.body.mail })
-        .exec()
-        .then(user => {
-            if (user.length >= 1) {
-                return res.status(409).json({
-                    message: 'Mail exists'
-                });
-            } else {
-                bcrypt.hash(req.body.password, 10, (err, hash) => {
-                    if (err) {
-                        return res.status(500).json({
-                            error: err
-                        });
-                    } else {
-                        const user = new User({
-                            _id: new mongoose.Types.ObjectId(),
-                            username: req.body.username,
-                            password: hash,
-                            ID: req.body.ID,
-                            position: req.body.position,
-                            email: req.body.email,
-                            userImage: req.file.path,
-                            
-                        });
-                        user
-                            .save()
-                            .then(result => {
-                                console.log(result);
-                                res.status(201).json({
-                                    success: true,
-                                    message: 'User created'
-                                });
-                            })
-                            .catch(err => {
-                                console.log(err);
-                                res.status(500).json({
-                                    error: err
-                                });
-                            });
-                    }
-                });
-            }
+exports.signup = async(req, res) => {
+    try{
+        const user = await User.find({ email: req.body.email });
+        if(user.length >=1){
+            res.status(409).json({
+                message: 'User exists'
+            });
+        }else{
+            const hashedPassword = await bcrypt.hash(req.body.password, 10);
+
+            const user = new User({
+                _id: new mongoose.Types.ObjectId(),
+                username: req.body.username,
+                password: hashedPassword,
+                ID: req.body.ID,
+                position: req.body.position,
+                email: req.body.email,
+                userImage: req.file.path,
+            })
+
+            user.plates.push(req.body.plates);
+
+            user.save()
+
+            res.status(201).json({
+                message: 'Created User',
+                user: user
+            });
+        }
+    }catch(err){
+        res.status(500).json({
+            error: err
         })
-        .catch();
+    } 
 }
 
-exports.users_uploadImage = async (req, res, next) => {
+exports.uploadImage = async (req, res) => {
     try {
         const user = await User.findById(req.params.userId);
 
@@ -74,57 +63,48 @@ exports.users_uploadImage = async (req, res, next) => {
     }
 }
 
-exports.users_login = (req, res, next) => {
-    User.findOne({ email: req.body.email })
-        .exec()
-        .then(user => {
-            if (user.length < 1) {
-                return res.status(401).json({
-                    message: 'Login failed'
+exports.login = async(req, res) => {
+    try {
+        const user = await User.findOne({ email: req.body.email });
+        if(!user){
+            res.status(400).json({
+                message: 'User does not exist'
+            });
+        }else{
+            const passwordValid = await bcrypt.compare(req.body.password, user.password); //true or false
+            if(!passwordValid){
+                res.status(500).json({
+                    message: 'Wrong password'
                 });
-            }
-            bcrypt.compare(req.body.password, user.password, (err, result) => {
-                if (err) {
-                    return res.status(500).json({
-                        message: 'Login failed'
-                    });
-                }
-                if (result) {
-                    const token = jwt.sign({
+            }else{
+                const token = jwt.sign(
+                    {
                         email: user.email,
-                        userId: user._id
+                        userid: user._id
                     },
-                        process.env.JWT_KEY,
-                        {
-                            expiresIn: "1h"
-                        }
-                    );
-                    return res.status(200).json({
-                        success: true,
-                        message: 'Login successful',
-                        user: {
-                            _id: user._id,
-                            username: user.username,
-                            email: user.email,
-                            userImage: user.userImage,
-                            token: token
-                        }
-                    });
-                }
-                res.status(402).json({
-                    message: 'Password not correct'
-                });
-            });
+                    process.env.JWT_KEY,
+                    {
+                        expiresIn: "1h"
+                    }
+                );
+
+                res.status(200).json({
+                    _id: user._id,
+                    username: user.username,
+                    email: user.email,
+                    userImage: user.userImage,
+                    token: token
+                })
+            }
+        }
+    }catch(err){
+        res.status(500).json({
+            error: err
         })
-        .catch(err => {
-            console.log(err);
-            res.status(500).json({
-                error: err
-            });
-        });
+    }
 }
 
-exports.users_update = async (req, res, next) => {
+exports.update = async (req, res) => {
     try {
         const user = await User.findById(req.params.userId);
 
@@ -173,50 +153,59 @@ exports.users_update = async (req, res, next) => {
     }
 }
 
-exports.users_delete_user = (req, res, next) => {
-    User.remove({ _id: req.params.userId })
-        .exec()
-        .then(result => {
-            res.json({
-                message: 'User deleted'
-            });
-        })
-        .catch(err => {
-            console.log(err);
-            res.json({
-                error: err
-            });
-        });
-}
-
-exports.users_changepass = async (req, res, next) => {
+exports.deleteUser = async(req, res) => {
     try {
-        const user = await User.findOne({ email: req.body.email });
-        if (req.body.oldpass === req.body.newpass) {
-            return res.status(409).json({
-                message: 'New password and Old password are the same'
+        const deletedUser = await User.deleteOne({_id: req.params.userId}); // { n: 1, ok: 1, deletedCount: 1 }
+        console.log(deletedUser);
+        if(deletedUser.deletedCount === 0){
+            res.status(400).json({
+                message: 'User does not exists'
             });
-        } else if (await bcrypt.compareSync(req.body.oldpass, user.password)) {
-            user.password = await bcrypt.hashSync(req.body.newpass, 10);
-            user.save();
-            return res.status(200).json({
-                message: 'Change password successfully'
-            });
-        } else {
-            return res.status(401).json({
-                error: 'Password do not match'
+        }else{
+            res.status(200).json({
+                message: 'Deleted User'
             });
         }
-    }
-    catch (err) {
-        console.log(err);
+    }catch(err){
         res.status(500).json({
             error: err
-        });
+        })
     }
 }
 
-exports.users_forgotpass = async (req, res, next) => {
+exports.changePass = async(req, res) => {
+    try{
+        const user = await User.findById(req.params.userId);
+        if(req.body.oldpass === '' || req.body.newpass === '' || req.body.reenterpass === ''){
+            res.status(400).json({
+                message: 'All retries must fill out'
+            });
+        }
+        else if(req.body.oldpass === req.body.newpass){
+            res.status(400).json({
+                message: 'New and old password are the same'
+            });
+        }else if(req.body.newpass !== req.body.reenternewpass){
+            res.status(400).json({
+                message: 'Both entries for new password must match'
+            })
+        }else if(await bcrypt.compare(req.body.oldpass, user.password)){
+            res.status(200).json({
+                message: 'Change password successfully'
+            })
+        }else{
+            res.status(401).json({
+                message: 'Password does not match'
+            })
+        }
+    }catch(err){
+        res.status(500).json({
+            error: err
+        })
+    }
+}
+
+exports.forgotPass = async(req, res) => {
     async.waterfall([
         function (done) {
             crypto.randomBytes(3, (err, buf) => {
@@ -276,7 +265,7 @@ exports.users_forgotpass = async (req, res, next) => {
     ]);
 }
 
-exports.users_forgotpasscheck = async (req, res, next) => {
+exports.forgotPassCheck = async(req, res) => {
     User.findOne({ email: req.body.email })
         .then(user => {
             if (user.resetToken === undefined || user.resetTokenExpires === undefined) {
@@ -317,7 +306,7 @@ exports.users_forgotpasscheck = async (req, res, next) => {
         });
 }
 
-exports.users_getuser = async(req, res, next) => {
+exports.getUser = async(req, res) => {
     const user = await User.findById(req.params.userId);
 
     return res.status(200).json({
