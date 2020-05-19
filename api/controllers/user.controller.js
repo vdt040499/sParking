@@ -41,24 +41,6 @@ exports.signup = async (req, res) => {
   }
 };
 
-// exports.uploadImage = async (req, res) => {
-//   try {
-//     const user = await User.findById(req.params.userId);
-
-//     user.userImage = req.file.path;
-
-//     user.save();
-
-//     return res.status(200).json({
-//       message: "Uploaded image successfully",
-//     });
-//   } catch (err) {
-//     res.status(500).json({
-//       error: err,
-//     });
-//   }
-// };
-
 exports.login = async (req, res) => {
   try {
     const user = await User.findOne({ email: req.body.email });
