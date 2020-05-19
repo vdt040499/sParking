@@ -25,12 +25,9 @@ exports.signup = async (req, res) => {
                 password: hashedPassword,
                 ID: req.body.ID,
                 position: req.body.position,
-                email: req.body.email,
-                userImage: req.file.path,
-            })
-
-            user.plates.push(req.body.plates);
-
+                email: req.body.email
+            });
+            
             user.save()
 
             res.status(201).json({
@@ -84,7 +81,7 @@ exports.login = async (req, res) => {
                     },
                     process.env.JWT_KEY,
                     {
-                        expiresIn: "1h"
+                        expiresIn: "7d"
                     }
                 );
 

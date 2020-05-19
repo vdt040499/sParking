@@ -16,8 +16,9 @@ const userSchema = mongoose.Schema({
     },
     userImage: { type: String },
     plates: [{type: String}],
-    tickets: {type: mongoose.Schema.Types.ObjectId, ref: 'Ticket'},
+    tickets: [{type: mongoose.Schema.Types.ObjectId, ref: 'Ticket'}],
     resetToken: { type: String, required: false },
+    amount: { type: Number, required: false},
     resetTokenExpires: { type: Date, required: false },  
 });
 
