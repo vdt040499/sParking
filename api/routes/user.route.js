@@ -33,11 +33,9 @@ const upload = multer({
     fileFilter: fileFilter
 });
 
-router.post('/signup', multer({
-    storage: storage
-}).single('userImage'), UsersController.signup);
+router.post('/signup', UsersController.signup);
 
-router.post('/:userId/uploadimage', upload.single('userImage'), UsersController.uploadImage);
+// router.post('/:userId/uploadimage', upload.single('userImage'), UsersController.uploadImage);
 
 router.post('/login', UsersController.login);
 
