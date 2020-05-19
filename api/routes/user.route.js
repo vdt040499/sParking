@@ -35,7 +35,7 @@ const upload = multer({
 
 router.post('/signup', UsersController.signup);
 
-router.post('/:userId/uploadimage', upload.single('userImage'), UsersController.uploadImage);
+// router.post('/:userId/uploadimage', upload.single('userImage'), UsersController.uploadImage);
 
 router.post('/login', UsersController.login);
 
