@@ -43,7 +43,7 @@ router.post('/:userId/updateuser', UsersController.update);
 
 router.delete('/:userId', checkAuth, UsersController.deleteUser);
 
-router.post('/changepass', checkAuth, UsersController.changePass);
+router.post('/changepass/:userId', checkAuth, UsersController.changePass);
 
 router.post('/forgotpassword', UsersController.forgotPass);
 

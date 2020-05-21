@@ -330,7 +330,7 @@ exports.changePass = async (req, res) => {
       res.status(400).json({
         message: "New and old password are the same",
       });
-    } else if (req.body.newpass !== req.body.reenternewpass) {
+    } else if (req.body.newpass !== req.body.reenterpass) {
       res.status(400).json({
         message: "Both entries for new password must match",
       });
