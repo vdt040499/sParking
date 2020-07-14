@@ -8,29 +8,29 @@ const User = require('../models/user.model');
 const UsersController = require('../controllers/user.controller');
 
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/user');
-    },
-    filename: function (req, file, cb) {
-        cb(null, file.fieldname + '-' + Date.now() + '.jpg');
-    }
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/user');
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.fieldname + '-' + Date.now() + '.jpg');
+  },
 });
 
 const fileFilter = (req, file, cb) => {
-    // reject a file
-    if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
-        cb(null, true);
-    } else {
-        cb(null, false);
-    }
+  // reject a file
+  if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+    cb(null, true);
+  } else {
+    cb(null, false);
+  }
 };
 
 const upload = multer({
-    storage: storage,
-    limits: {
-        fileSize: 1024 * 1024 * 5
-    },
-    fileFilter: fileFilter
+  storage: storage,
+  limits: {
+    fileSize: 1024 * 1024 * 5,
+  },
+  fileFilter: fileFilter,
 });
 
 router.post('/signup', UsersController.signup);
@@ -51,6 +51,14 @@ router.post('/forgotpasswordcheck', UsersController.forgotPassCheck);
 
 router.get('/getuser/:userId', UsersController.getUser);
 
+// Payment
 
+router.get('/moneysource/:userId', UsersController.getMoneySource);
+
+router.post('/moneysource/:userId', UsersController.createMoneySource);
+
+router.post('/moneysource/topup/:sourceId', UsersController.topup);
+
+router.get('/history/:userId', UsersController.getHistory);
 
 module.exports = router;

@@ -1,19 +1,22 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const multer = require("multer");
-const async = require("async");
-const crypto = require("crypto");
-const nodemailer = require("nodemailer");
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const async = require('async');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+const fetch = require('node-fetch');
 
-const User = require("../models/user.model");
+const User = require('../models/user.model');
+const MoneySource = require('../models/moneysource.model');
+const Transaction = require('../models/transactionhistory');
 
 exports.signup = async (req, res) => {
   try {
     const user = await User.find({ email: req.body.email });
     if (user.length >= 1) {
       res.status(409).json({
-        message: "User exists",
+        message: 'User exists',
       });
     } else {
       const hashedPassword = await bcrypt.hash(req.body.password, 10);
@@ -30,7 +33,7 @@ exports.signup = async (req, res) => {
       user.save();
 
       res.status(201).json({
-        message: "Created User",
+        message: 'Created User',
         user: user,
       });
     }
@@ -46,7 +49,7 @@ exports.login = async (req, res) => {
     const user = await User.findOne({ email: req.body.email });
     if (!user) {
       res.status(400).json({
-        message: "User does not exist",
+        message: 'User does not exist',
       });
     } else {
       const passwordValid = await bcrypt.compare(
@@ -55,7 +58,7 @@ exports.login = async (req, res) => {
       ); //true or false
       if (!passwordValid) {
         res.status(500).json({
-          message: "Wrong password",
+          message: 'Wrong password',
         });
       } else {
         const token = jwt.sign(
@@ -65,7 +68,7 @@ exports.login = async (req, res) => {
           },
           process.env.JWT_KEY,
           {
-            expiresIn: "7d",
+            expiresIn: '7d',
           }
         );
 
@@ -86,209 +89,22 @@ exports.login = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
-    // tìm kiếm acc bằng userId vì userId là duy nhất (unique)
-    const user = await User.findById(req.params.userId);
-
-    // tìm trong danh sách những acc có trong database, email người nhập để thay đổi có trùng với một acc nào đó không?
-    const userexist = await User.find({
-      email: req.body.email,
+    const user = await User.findByIdAndUpdate(req.params.userId, req.body, {
+      new: true,
+      runValidators: true,
     });
-    //các trường hợp có thể có
-    // trường hợp email trống (empty) tức là người k thay đổi email
-    if (req.body.email == "") {
-      //kiểm tra tiếp username
-      // nếu username trống (empty) tức là người dùng không muốn thay đổi username
-      if (req.body.username == "") {
-        // kiểm tra tiếp ID (mssv)
-        // nếu ID trống (empty) tức là người dùng không muốn thay đổi ID
-        if (req.body.ID == "") {
-          // kiểm tra tiếp position
-          // nếu position trống (empty) tức là người dùng không muốn thay đổi position
-          // lỗi: người dùng có thể thay đổi ít nhất 1 thuộc tính nào đó, không thể thay đổi rỗng
-          if (req.body.position == "") {
-            return res.status(400).json({
-              message: "You must fill at least one field",
-            });
-          } else {
-            // ngược lại nếu position không trống
-            // lỗi: nếu thay đổi position thì phải thay đổi ID
-            return res.status(501).json({
-              message:
-                "If you want to change position , you must change ID more",
-            });
-          }
-        } else {
-          //ngược lại nếu ID không trống
-          // kiểm tra tiếp position
-          //nếu position trống
-          //lỗi: nếu thay đổi ID thì phải thay đổi position
-          if (req.body.position == "") {
-            return res.status(501).json({
-              message:
-                "If you want to change ID , you must change position more",
-            });
-          } else {
-            //ngược lại nếu cả ID và position đều không trống
-            //ID và position của user tương ứng sẽ đc thay đổi như thông tin người dùng request
-            user.ID = req.body.ID;
-            user.position = req.body.position;
-            user.save();
-            // xuất thông báo thay đổi thành công
-            return res.status(200).json({
-              message: "Updates Successfully",
-            });
-          }
-        }
-      } else {
-        // ngược lại nếu username không trống (empty)
-        //kiểm tra tiếp ID
-        //nếu ID rỗng
-        if (req.body.ID == "") {
-          // kiểm tra tiếp position
-          // nếu position rỗng
-          if (req.body.position == "") {
-            //username của user tương ứng sẽ đc thay đổi như thông tin người dùng request
-            user.username = req.body.username;
-            user.save();
-            // xuất thông báo thay đổi thành công
-            return res.status(200).json({
-              message: "Updates Successfully",
-            });
-          } else {
-            // ngược lại nếu position không rỗng
-            // chỉ username đc thay đổi
-            return res.status(400).json({
-              message:
-                "If you want to change position , you must change ID more",
-            });
-          }
-        } else {
-          // ngược lại nếu ID không rỗng
-          // kiểm tra tiếp position
-          // nếu position rỗng
-          if (req.body.position == "") {
-            return res.status(400).json({
-              message:
-                "If you want to change ID , you must change position more ",
-            });
-          } else {
-            // ngược lại nếu position không rỗng
-            // thay đổi username, ID,position
-            user.username = req.body.username;
-            user.ID = req.body.ID;
-            user.position = req.body.position;
-            user.save();
-            return res.status(200).json({
-              message: "Updates Successfully",
-            });
-          }
-        }
-      }
+
+    if (user) {
+      res.status(200).json({
+        message: 'OK',
+        user: user,
+      });
     } else {
-      // ngược lại nếu email không rỗng
-      // kiểm tra nếu email thay đổi trùng với email có trong database thì lỗi
-      if (userexist.length >= 1) {
-        return res.status(409).json({
-          message: "Mail exists",
-        });
-      } else {
-        // ngược lại nếu email không trùng
-        // kiểm tra username
-        // nếu username rỗng
-        if (req.body.username == "") {
-          //kiểm tra tiếp ID
-          // nếu ID rỗng
-          if (req.body.ID == "") {
-            // kiểm tra tiếp position
-            // nếu position rỗng
-            // chỉ thay đổi email
-            if (req.body.position == "") {
-              user.email = req.body.email;
-              user.save();
-              return res.status(200).json({
-                message: "Updates Successfully",
-              });
-            } else {
-              //ngược lại nếu position không rỗng
-              // chỉ thay đổi email
-              return res.status(400).json({
-                message:
-                  "If you want to change position, you must change ID more",
-              });
-            }
-          } else {
-            // ngược lại nếu ID không rỗng
-            //kiểm tra tiếp position
-            // nếu position rỗng
-            // chỉ thay đổi email
-            if (req.body.position == "") {
-              return res.status(400).json({
-                message:
-                  "If you want to change ID, you must change position more",
-              });
-            } else {
-              // ngược lại nếu position không rỗng
-              // thay đổi email, ID, position
-              user.email = req.body.email;
-              user.ID = req.body.ID;
-              user.position = req.body.position;
-              user.save();
-              return res.status(200).json({
-                message: "Updates Successfully",
-              });
-            }
-          }
-        } else {
-          // ngược lại nếu username không  rỗng
-          // kiểm tra tiếp ID
-          //nesu ID rỗng
-          if (req.body.ID == "") {
-            //kiểm tra tiếp position
-            //nếu position rỗng
-            // chỉ thay đổi email, username
-            if (req.body.position == "") {
-              user.email = req.body.email;
-              user.username = req.body.username;
-              user.save();
-              return res.status(200).json({
-                message: "Updates Successfully",
-              });
-            } else {
-              // ngược lại nếu position không rỗng
-              // chỉ thay đổi email, username
-              return res.status(400).json({
-                message:
-                  "If you want to change position, you must change ID more",
-              });
-            }
-          } else {
-            // ngược lại nếu ID không rỗng
-            //kiểm tra tiếp position
-            //nếu position rỗng
-            // chỉ thay đổi email, username
-            if (req.body.position == "") {
-              return res.status(400).json({
-                message:
-                  "If you want to change ID, you must change position more",
-              });
-            } else {
-              // ngược lại nếu position không rỗng
-              // thay đổi email, username, ID, position
-              user.email = req.body.email;
-              user.username = req.body.username;
-              user.ID = req.body.ID;
-              user.position = req.body.position;
-              user.save();
-              return res.status(200).json({
-                message: "Updates Successfully",
-              });
-            }
-          }
-        }
-      }
+      res.status(500).json({
+        error: err,
+      });
     }
   } catch (err) {
-    console.log(err);
     res.status(500).json({
       error: err,
     });
@@ -301,11 +117,11 @@ exports.deleteUser = async (req, res) => {
     console.log(deletedUser);
     if (deletedUser.deletedCount === 0) {
       res.status(400).json({
-        message: "User does not exists",
+        message: 'User does not exists',
       });
     } else {
       res.status(200).json({
-        message: "Deleted User",
+        message: 'Deleted User',
       });
     }
   } catch (err) {
@@ -319,28 +135,28 @@ exports.changePass = async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
     if (
-      req.body.oldpass === "" ||
-      req.body.newpass === "" ||
-      req.body.reenterpass === ""
+      req.body.oldpass === '' ||
+      req.body.newpass === '' ||
+      req.body.reenterpass === ''
     ) {
       res.status(400).json({
-        message: "All retries must fill out",
+        message: 'All retries must fill out',
       });
     } else if (req.body.oldpass === req.body.newpass) {
       res.status(400).json({
-        message: "New and old password are the same",
+        message: 'New and old password are the same',
       });
     } else if (req.body.newpass !== req.body.reenterpass) {
       res.status(400).json({
-        message: "Both entries for new password must match",
+        message: 'Both entries for new password must match',
       });
     } else if (await bcrypt.compare(req.body.oldpass, user.password)) {
       res.status(200).json({
-        message: "Change password successfully",
+        message: 'Change password successfully',
       });
     } else {
       res.status(401).json({
-        message: "Password does not match",
+        message: 'Password does not match',
       });
     }
   } catch (err) {
@@ -355,7 +171,7 @@ exports.forgotPass = async (req, res) => {
     function (done) {
       crypto.randomBytes(3, (err, buf) => {
         if (err) throw err;
-        const token = buf.toString("hex");
+        const token = buf.toString('hex');
         done(err, token);
       });
     },
@@ -364,7 +180,7 @@ exports.forgotPass = async (req, res) => {
       User.findOne({ email: req.body.email }, function (err, user) {
         if (!user) {
           return res.status(409).json({
-            message: "No account with that email address exists",
+            message: 'No account with that email address exists',
           });
         }
 
@@ -379,7 +195,7 @@ exports.forgotPass = async (req, res) => {
 
     function (token, user, done) {
       const transporter = nodemailer.createTransport({
-        service: "Gmail",
+        service: 'Gmail',
         auth: {
           user: process.env.GMAIL_USER,
           pass: process.env.GMAIL_PASSWORD,
@@ -387,27 +203,27 @@ exports.forgotPass = async (req, res) => {
       });
 
       const mailOptions = {
-        from: "sparkingsystem@gmail.com",
+        from: 'sparkingsystem@gmail.com',
         to: user.email,
-        subject: "Renew your password",
-        text: "To reset your password with: " + token,
+        subject: 'Renew your password',
+        text: 'To reset your password with: ' + token,
       };
 
       transporter.sendMail(mailOptions, function (err, data) {
         if (err) {
-          console.log("Error occurs: %s", err);
+          console.log('Error occurs: %s', err);
           return res.status(401).json({
             error: err,
           });
         } else {
           console.log(
-            "Email sent to " + user.email + ". Please check your email please"
+            'Email sent to ' + user.email + '. Please check your email please'
           );
           return res.status(200).json({
             message:
-              "Email sent to " +
+              'Email sent to ' +
               user.email +
-              ". Please check your email please",
+              '. Please check your email please',
           });
         }
       });
@@ -427,7 +243,7 @@ exports.forgotPassCheck = async (req, res) => {
         user.resetTokenExpires = undefined;
         user.save();
         return res.status(401).json({
-          message: "Sorry, your token expired date has been out of date",
+          message: 'Sorry, your token expired date has been out of date',
         });
       } else {
         if (req.body.newpass === req.body.confirm) {
@@ -437,16 +253,16 @@ exports.forgotPassCheck = async (req, res) => {
             user.resetTokenExpires = undefined;
             user.save();
             return res.status(200).json({
-              message: "Your password has been changed successfully",
+              message: 'Your password has been changed successfully',
             });
           } else {
             return res.status(402).json({
-              message: "Verify code not correct",
+              message: 'Verify code not correct',
             });
           }
         } else {
           return res.status(403).json({
-            message: "New password and Confirm password are not the same",
+            message: 'New password and Confirm password are not the same',
           });
         }
       }
@@ -460,4 +276,142 @@ exports.getUser = async (req, res) => {
   return res.status(200).json({
     user: user,
   });
+};
+
+exports.getMoneySource = async (req, res) => {
+  try {
+    const doc = await MoneySource.find({ user: req.params.userId });
+
+    res.status(200).json({
+      results: doc.length,
+      moneySource: doc,
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: err,
+    });
+  }
+};
+
+exports.createMoneySource = async (req, res) => {
+  try {
+    const data = {
+      bank: req.body.bank,
+      cardnumber: req.body.cardnumber,
+      validfrom: req.body.validfrom,
+    };
+
+    const api_url = 'http://localhost:8000/bank/checkbankaccount';
+
+    const response = await fetch(api_url, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const json = await response.json();
+
+    if (json.message == 'OK') {
+      const moneySource = new MoneySource({
+        _id: new mongoose.Types.ObjectId(),
+        user: req.params.userId,
+        name: json.name,
+        bank: json.bank,
+        cardnumbersliced: json.cardnumbersliced,
+      });
+
+      moneySource.save();
+
+      res.status(200).json({
+        message: 'OK',
+        moneySource: moneySource,
+      });
+    } else {
+      res.status(409).json({
+        message: json.message,
+      });
+    }
+  } catch (err) {
+    res.status(500).json({
+      error: err,
+    });
+  }
+};
+
+exports.topup = async (req, res) => {
+  try {
+    const moneySource = await MoneySource.findById(req.params.sourceId);
+
+    if (moneySource) {
+      const data = {
+        bank: moneySource.bank,
+        cardnumbersliced: moneySource.cardnumbersliced,
+        name: moneySource.name,
+        amount: req.body.amount,
+      };
+
+      const api_url = 'http://localhost:8000/bank/topup';
+
+      const response = await fetch(api_url, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const json = await response.json();
+
+      if (json.message == 'OK') {
+        const user = await User.findById(moneySource.user);
+
+        if (user) {
+          user.balance += req.body.amount;
+
+          const transaction = new Transaction({
+            _id: new mongoose.Types.ObjectId(),
+            user: moneySource.user,
+            note: `Nạp tiền từ ${moneySource.bank}`,
+            status: 'Thành công',
+            amount: `+${req.body.amount}`,
+          });
+
+          user.save();
+
+          transaction.save();
+
+          res.status(200).json({
+            message: 'OK',
+            user: user,
+            transaction: transaction,
+          });
+        }
+      } else {
+        res.status(409).json({
+          error: json.message,
+        });
+      }
+    } else {
+      res.status(500).json({
+        error: err,
+      });
+    }
+  } catch (err) {
+    res.status(500).json({
+      error: err,
+    });
+  }
+};
+
+exports.getHistory = async (req, res) => {
+  try {
+    const doc = await Transaction.find({ user: req.params.userId });
+
+    res.status(200).json({
+      results: doc.length,
+      transaction: doc,
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: err,
+    });
+  }
 };
