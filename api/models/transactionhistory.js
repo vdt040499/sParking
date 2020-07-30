@@ -19,9 +19,4 @@ const transactionSchema = mongoose.Schema({
   },
 });
 
-transactionSchema.index(
-  { user: 1, bank: 1, cardnumbersliced: 1, balance: 1 },
-  { unique: true }
-);
-
 module.exports = mongoose.model('TransactionHistory', transactionSchema);

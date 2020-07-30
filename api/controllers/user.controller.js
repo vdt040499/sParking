@@ -10,6 +10,7 @@ const fetch = require('node-fetch');
 const User = require('../models/user.model');
 const MoneySource = require('../models/moneysource.model');
 const Transaction = require('../models/transactionhistory');
+const e = require('express');
 
 exports.signup = async (req, res) => {
   try {
@@ -364,7 +365,7 @@ exports.topup = async (req, res) => {
         const user = await User.findById(moneySource.user);
 
         if (user) {
-          user.balance += req.body.amount;
+          user.balance += parseInt(req.body.amount);
 
           const transaction = new Transaction({
             _id: new mongoose.Types.ObjectId(),
@@ -383,6 +384,80 @@ exports.topup = async (req, res) => {
             user: user,
             transaction: transaction,
           });
+        }
+      } else {
+        res.status(409).json({
+          error: json.message,
+        });
+      }
+    } else {
+      res.status(500).json({
+        error: err,
+      });
+    }
+  } catch (err) {
+    res.status(500).json({
+      error: err,
+    });
+  }
+};
+
+exports.withdraw = async (req, res) => {
+  try {
+    const moneySource = await MoneySource.findById(req.params.sourceId);
+
+    if (moneySource) {
+      const data = {
+        bank: moneySource.bank,
+        cardnumbersliced: moneySource.cardnumbersliced,
+        name: moneySource.name,
+        amount: req.body.amount,
+      };
+
+      const user = await User.findById(moneySource.user);
+
+      if (user) {
+        if (user.balance < req.body.amount) {
+          res.status(409).json({
+            message:
+              'There is not enough money in your account to make this transaction.',
+          });
+        } else {
+          const api_url = 'http://localhost:8000/bank/withdraw';
+
+          const response = await fetch(api_url, {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: { 'Content-Type': 'application/json' },
+          });
+
+          const json = await response.json();
+
+          if (json.message == 'OK') {
+            user.balance -= parseInt(req.body.amount);
+
+            const transaction = new Transaction({
+              _id: new mongoose.Types.ObjectId(),
+              user: moneySource.user,
+              note: `Rút tiền về ${moneySource.bank}`,
+              status: 'Thành công',
+              amount: `-${req.body.amount}`,
+            });
+
+            user.save();
+
+            transaction.save();
+
+            res.status(200).json({
+              message: 'OK',
+              user: user,
+              transaction: transaction,
+            });
+          } else {
+            res.status(409).json({
+              error: json.message,
+            });
+          }
         }
       } else {
         res.status(409).json({

@@ -59,6 +59,8 @@ router.post('/moneysource/:userId', UsersController.createMoneySource);
 
 router.post('/moneysource/topup/:sourceId', UsersController.topup);
 
+router.post('/moneysource/withdraw/:sourceId', UsersController.withdraw);
+
 router.get('/history/:userId', UsersController.getHistory);
 
 module.exports = router;
