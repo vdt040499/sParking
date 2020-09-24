@@ -23,6 +23,7 @@ const ticketRoutes = require('./api/routes/ticket.route');
 // );
 
 //Atlas VoTan
+
 // mongoose.connect(
 //     'mongodb+srv://admin:' +
 //     process.env.MONGO_ATLAS_PW +

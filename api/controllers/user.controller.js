@@ -20,6 +20,7 @@ exports.signup = async (req, res) => {
         message: 'User exists',
       });
     } else {
+      console.log(req.body.email);
       const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
       const user = new User({
@@ -39,8 +40,9 @@ exports.signup = async (req, res) => {
       });
     }
   } catch (err) {
+    console.log(err);
     res.status(500).json({
-      error: err,
+      error: err.toString(),
     });
   }
 };

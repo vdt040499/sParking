@@ -44,7 +44,7 @@ const User = require('../models/user.model');
 const TicketsController = require('../controllers/ticket.controller');
 
 router.get('/getticket', TicketsController.getticket);
-router.post('/createticket', multer({ storage: storageForCreate }).single('plateForCreate'), TicketsController.createticket);
+router.post('/createticket', TicketsController.createticket);
 router.post('/payticket/:ticketId/:userId', multer({ storage: storageForPay }).single('plateForPay'), TicketsController.payTicket);
 
 module.exports = router;
