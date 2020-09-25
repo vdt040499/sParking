@@ -18,8 +18,7 @@ exports.getticket = async (req, res, next) => {
 module.exports.createticket = async (req, res) => {
     try {
         const { numplate, userId } = req.body;
-        // let numplate = "63B4 28533";
-        // let userId = "17521022";
+
         if (numplate && userId) {
             const user = await User.findOne({ ID: userId });
             if (!user) {
