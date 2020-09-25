@@ -17,58 +17,43 @@ exports.getticket = async (req, res, next) => {
 
 module.exports.createticket = async (req, res) => {
     try {
-        // const user = await User.findById(req.body.userId);
-        // if (!user) {
-        //     res.status(400).json({
-        //         message: "User does not exists"
-        //     });
-        // } else {
-
-        //     const api_url = 'http://localhost:5000/detections';
-
-        //     var plateText;
-
-        //     try {
-        //         const response = await fetch(api_url);
-        //         const responseJSON = await response.json();
-        //         plateText = responseJSON.response;
-        //     } catch (error) {
-        //         console.log(error);
-        //     }
-
-            
-
-        //     const textPlateCheck = user.plates.indexOf(plateText);
-
-        //     if (textPlateCheck === -1) {
-        //         res.status(400).json({
-        //             message: "This plate is not yours"
-        //         })
-        //     } else {
-        //         const ticket = new Ticket({
-        //             _id: new mongoose.Types.ObjectId(),
-        //             createdby: req.body.userId,
-        //             plateText: plateText
-        //         });
-
-        //         ticket.save();
-        //         console.log(ticket);
-        //         res.status(201).json({
-        //             success: true,
-        //             message: 'Created ticket successfully',
-        //             ticket: ticket
-        //         });
-        //     }
-
-        // }
-
         const { numplate, userId } = req.body;
-
+        // let numplate = "63B4 28533";
+        // let userId = "17521022";
         if (numplate && userId) {
-            res.send('OK');
+            const user = await User.findOne({ ID: userId });
+            if (!user) {
+                res.status(400).json({
+                    message: "User does not exists"
+                });
+            } else {
+                const textPlateCheck = user.plates.indexOf(numplate);
+
+                if (textPlateCheck === -1) {
+                    res.status(400).json({
+                        message: "This plate is not yours"
+                    })
+                } else {
+                    const ticket = new Ticket({
+                        _id: new mongoose.Types.ObjectId(),
+                        createdby: user._id,
+                        plateText: numplate
+                    });
+
+                    ticket.save();
+                    console.log(ticket);
+                    res.status(201).send({
+                        success: true,
+                        message: 'Created ticket successfully',
+                        ticket: ticket
+                    });
+                }
+
+            }
         } else {
             res.status(400).send('Numplate and userID required');
         }
+
     } catch (err) {
         console.log(err);
         res.status(500).send({
