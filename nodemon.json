@@ -3,7 +3,9 @@
         "MONGO_ATLAS_PW": "sparking",
         "JWT_KEY": "sparking",
         "GMAIL_USER": "sparkingsystem@gmail.com",
-        "GMAIL_PASSWORD": "s1Parking5*"
-        
+        "GMAIL_PASSWORD": "s1Parking5*",
+        "MONGO_DB_USER": "admin",
+        "MONGO_DB_PASSWORD": "tan040499",
+        "MONGO_DB_DATABASE": "sparking"    
     }
 }

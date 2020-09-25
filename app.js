@@ -24,42 +24,54 @@ const ticketRoutes = require('./api/routes/ticket.route');
 
 //Atlas VoTan
 
-// mongoose.connect(
-//     'mongodb+srv://admin:' +
-//     process.env.MONGO_ATLAS_PW +
-//     '@restapi-mfg8v.mongodb.net/test?retryWrites=true&w=majority',
-//     {
-//         useNewUrlParser: true,
-//         useUnifiedTopology: true,
-//     }  
-// );
+mongoose
+  .connect(
+    `mongodb+srv://${process.env.MONGO_DB_USER}:${process.env.MONGO_DB_PASSWORD}@cluster0.mfg8v.mongodb.net/${process.env.MONGO_DB_DATABASE}?retryWrites=true&w=majority`,
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useCreateIndex: true,
+    }
+  )
+  .then(() => {
+    console.log('Database connected!');
+  });
 
 //Local
-mongoose.set('useCreateIndex', true);
-mongoose.connect('mongodb://localhost:27017/sParking', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-}, err => {
-    if(err) throw err
-    console.log('Connect MongoDB Successfully!')
-});
+// mongoose.set('useCreateIndex', true);
+// mongoose.connect('mongodb://localhost:27017/sParking', {
+//     useNewUrlParser: true,
+//     useUnifiedTopology: true
+// }, err => {
+//     if(err) throw err
+//     console.log('Connect MongoDB Successfully!')
+// });
 mongoose.Promise = global.Promise;
 
 //Middlewares
 app.use(morgan('dev'));
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
-app.use(session({ secret: 'session secret key', resave: true, saveUninitialized:true }));
-app.use((req,res,next)=>{
-    res.header('Access-Control-Allow-Origin','*');
-    res.header('Access-Control-Allow-Headers','Origin, X-Requested-With, Content-Type, Accept, Authorization');
+app.use(
+  session({
+    secret: 'session secret key',
+    resave: true,
+    saveUninitialized: true,
+  })
+);
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+  );
 
-    if (req.method === 'OPTIONS'){
-        res.header('Access-Control-Allow-Methods', 'PUT, POST,PATCH, DELETE, GET');
-        return res.status(200).json({});
-    }
-    next();
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Methods', 'PUT, POST,PATCH, DELETE, GET');
+    return res.status(200).json({});
+  }
+  next();
 });
 
 //Routes
@@ -67,19 +79,19 @@ app.use('/users', userRoutes);
 app.use('/tickets', ticketRoutes);
 
 //Catch 404 errors and forward then to error handler
-app.use((req,res,next)=>{
-    const error = new Error('Not found');
-    error.status(404);
-    next(error);
+app.use((req, res, next) => {
+  const error = new Error('Not found');
+  error.status(404);
+  next(error);
 });
 
-app.use((error,req,res,next)=>{
-    res.status(error.status || 500);
-    res.json({
-        error: {
-            message: error.message
-        }
-    });
+app.use((error, req, res, next) => {
+  res.status(error.status || 500);
+  res.json({
+    error: {
+      message: error.message,
+    },
+  });
 });
 
 //Module exports
