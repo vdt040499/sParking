@@ -23,6 +23,7 @@ module.exports.createticket = async (req, res) => {
             const user = await User.findOne({ ID: userId });
             if (!user) {
                 res.status(400).json({
+                    signal: '0',
                     message: "User does not exists"
                 });
             } else {
@@ -30,6 +31,7 @@ module.exports.createticket = async (req, res) => {
 
                 if (textPlateCheck === -1) {
                     res.status(400).json({
+                        signal:  '0',
                         message: "This plate is not yours"
                     })
                 } else {
@@ -43,6 +45,7 @@ module.exports.createticket = async (req, res) => {
                     console.log(ticket);
                     res.status(201).send({
                         success: true,
+                        signal: '1',
                         message: 'Created ticket successfully',
                         ticket: ticket
                     });
