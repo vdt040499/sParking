@@ -22,12 +22,18 @@ module.exports.createticket = async (req, res) => {
     if (numplate && userId) {
       const user = await User.findOne({ ID: userId });
       if (!user) {
-        res.send('ERROR');
+        res.status(400).json({
+          success: false,
+          message: 'User does not exists',
+        });
       } else {
         const textPlateCheck = user.plates.indexOf(numplate);
 
         if (textPlateCheck === -1) {
-          res.send('ERROR');
+          res.status(400).json({
+            success: false,
+            message: 'This plate is not yours',
+          });
         } else {
           const ticket = new Ticket({
             _id: new mongoose.Types.ObjectId(),
@@ -37,7 +43,11 @@ module.exports.createticket = async (req, res) => {
 
           ticket.save();
           console.log(ticket);
-          res.send('OK');
+          res.status(201).send({
+            success: true,
+            message: 'Created ticket successfully',
+            ticket: ticket,
+          });
         }
       }
     } else {
