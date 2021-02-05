@@ -54,27 +54,31 @@ exports.login = async (req, res) => {
       res.status(400).json({
         message: 'User does not exist',
       });
+      console.log("CANT FIND USER")
     } else {
       const passwordValid = await bcrypt.compare(
         req.body.password,
         user.password
       ); //true or false
+      
+      console.log(user);
       if (!passwordValid) {
         res.status(500).json({
           message: 'Wrong password',
         });
       } else {
+        console.log("FIND TOKEN");
         const token = jwt.sign(
           {
             email: user.email,
             userid: user._id,
           },
-          process.env.JWT_KEY,
+          'sparking',
           {
             expiresIn: '7d',
           }
         );
-
+        console.log(token);
         res.status(200).json({
           _id: user._id,
           username: user.username,
@@ -200,8 +204,8 @@ exports.forgotPass = async (req, res) => {
       const transporter = nodemailer.createTransport({
         service: 'Gmail',
         auth: {
-          user: process.env.GMAIL_USER,
-          pass: process.env.GMAIL_PASSWORD,
+          user: "sparkingsystem@gmail.com",
+          pass: "3135134162Tom&",
         },
       });
 
