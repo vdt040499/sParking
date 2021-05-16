@@ -15,7 +15,7 @@ const userSchema = mongoose.Schema({
     match: /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/,
   },
   userImage: { type: String },
-  plates: [{ type: String }],
+  plate: { type: String },
   tickets: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Ticket' }],
   amount: { type: Number, required: false },
   resetToken: { type: String, required: false },
@@ -27,6 +27,10 @@ const userSchema = mongoose.Schema({
     required: false,
     default: 0,
   },
+  parkingStatus: {
+    type: Boolean,
+    default: false
+  }
 });
 
 module.exports = mongoose.model('User', userSchema);
