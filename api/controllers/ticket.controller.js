@@ -1,10 +1,11 @@
 const mongoose = require('mongoose');
 const fetch = require('node-fetch');
+const bcrypt = require('bcryptjs');
 
 const User = require('../models/user.model');
 const Ticket = require('../models/ticket.model');
 
-exports.getticket = async (req, res, next) => {
+exports.getTicket = async (req, res, next) => {
   try {
     const tickets = await Ticket.find();
     res.json(tickets);
@@ -15,11 +16,11 @@ exports.getticket = async (req, res, next) => {
   }
 };
 
-module.exports.createticket = async (req, res) => {
+module.exports.createTicket = async (req, res) => {
   try {
-    const { numplate, userId } = req.body;
+    const userId = req.params.userId;
 
-    if (numplate && userId) {
+    if (userId) {
       const user = await User.findOne({ ID: userId });
       if (!user) {
         res.status(400).json({
@@ -27,28 +28,22 @@ module.exports.createticket = async (req, res) => {
           message: 'User does not exists',
         });
       } else {
-        const textPlateCheck = user.plates.indexOf(numplate);
+        const randomCheck = await bcrypt.hash(user.plate, 10)
 
-        if (textPlateCheck === -1) {
-          res.status(400).json({
-            success: false,
-            message: 'This plate is not yours',
-          });
-        } else {
-          const ticket = new Ticket({
-            _id: new mongoose.Types.ObjectId(),
-            createdby: user._id,
-            plateText: numplate,
-          });
+        const ticket = new Ticket({
+          _id: new mongoose.Types.ObjectId(),
+          randomCheck: randomCheck,
+          createdby: user._id
+        });
 
-          ticket.save();
-          console.log(ticket);
-          res.status(201).send({
-            success: true,
-            message: 'Created ticket successfully',
-            ticket: ticket,
-          });
-        }
+        await ticket.save()
+        user.tickets.push(ticket._id)
+        await user.save()
+        res.status(201).send({
+          success: true,
+          message: 'Created ticket successfully',
+          ticket: ticket,
+        });
       }
     } else {
       res.status(400).send('Numplate and userID required');
@@ -63,42 +58,19 @@ module.exports.createticket = async (req, res) => {
 
 module.exports.payTicket = async (req, res) => {
   try {
-    const ticket = await Ticket.findById(req.params.ticketId);
-    if (!ticket) {
-      res.status(400).json({
-        message: 'Ticket does not exists',
-      });
-    } else {
-      var spawn = require('child_process').spawn;
-      var process = spawn('python', [
-        './Plate_Recognization_SVM/read_plate.py',
-        req.file.path,
-      ]);
+    const { userId, randomCheck } = req.body;
 
-      process.stdout.on('data', function (data) {
-        const textPlateForCheck = data.toString();
-        var splitedTextArr = textPlateForCheck.split('\r');
-        var removeTextArr = splitedTextArr.slice(0, 1);
-        var plateText = removeTextArr.join('');
+    const user = await User.findOne({ ID: userId })
 
-        if (req.params.userId !== ticket.createdby.toString()) {
-          res.status(409).json({
-            message: 'This ticket is not yours!',
-          });
-        }
+    const tickets = user.tickets
 
-        if (ticket.plateText !== plateText) {
-          res.status(400).json({
-            message: 'Plate text does not match!',
-          });
-        }
+    const sortedTickets = tickets.sort((a, b) => {
+      return new Date(b.createdAt) - new Date(a.createAt)
+    })
 
-        res.status(200).json({
-          success: true,
-          message: 'You can take you vehicle out!',
-        });
-      });
-    }
+    const checkTicket = sortedTickets[0]
+
+    const user = await User.findOne({ ID: userId })
   } catch (err) {
     res.status(500).json({
       error: err,
