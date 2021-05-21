@@ -6,6 +6,9 @@ const morgan = require('morgan');
 const session = require('express-session');
 const cors = require('cors');
 const socketio = require('socket.io');
+const moment = require('moment');
+
+const Ticket = require('./api/models/ticket.model')
 
 //Define port
 const port = process.env.PORT || 5000;
@@ -19,13 +22,28 @@ const app = express();
 const server = http.createServer(app);
 const io = socketio(server);
 
+const getCurNumOfTic = async () => {
+  const today = moment().startOf('day')
+
+  const tickets = await Ticket.find({
+    createdAt: {
+      $gte: today.toDate(),
+      $lte: moment(today).endOf('day').toDate()
+    }
+  })
+
+  return tickets
+}
+
 io.on('connection', (socket) => {
   console.log('We have a new connection!!!')
   
+  // Init data
   socket.on('initial', async (callback) => {
     const users = await User.find().select(['-password']);
+    const curTickets = await getCurNumOfTic()
 
-    callback(users)
+    callback(users, curTickets)
   })
 
   socket.on('disconnect', () => {
@@ -131,5 +149,5 @@ mongoose
         
 //Listen a port
 server.listen(port, () => {
-  console.log('Hello! Im a server ! Im working on port ' + port);
+  console.log('Server is running on port ' + port);
 });

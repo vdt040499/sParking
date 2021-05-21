@@ -1,13 +1,21 @@
 const mongoose = require('mongoose');
 const fetch = require('node-fetch');
 const bcrypt = require('bcryptjs');
+const moment = require('moment');
 
 const User = require('../models/user.model');
 const Ticket = require('../models/ticket.model');
 
-exports.getTicket = async (req, res, next) => {
+exports.getCurNumOfTic = async (req, res, next) => {
   try {
-    const tickets = await Ticket.find();
+    const today = moment().startOf('day')
+
+    const tickets = await Ticket.find({
+      createdAt: {
+        $gte: today.toDate(),
+        $lte: moment(today).endOf('day').toDate()
+      }
+    })
     res.json(tickets);
   } catch (err) {
     res.status(500).json({
@@ -16,7 +24,7 @@ exports.getTicket = async (req, res, next) => {
   }
 };
 
-module.exports.createTicket = async (req, res) => {
+exports.createTicket = async (req, res) => {
   try {
     const userId = req.params.userId;
 
@@ -31,14 +39,17 @@ module.exports.createTicket = async (req, res) => {
         const randomCheck = await bcrypt.hash(user.plate, 10)
 
         const ticket = new Ticket({
-          _id: new mongoose.Types.ObjectId(),
           randomCheck: randomCheck,
-          createdby: user._id
+          user: user._id
         });
 
         await ticket.save()
-        user.tickets.push(ticket._id)
+        const currentTicket = await Ticket.findOne({ user: user._id })
+        user.tickets.push(currentTicket._id)
+        user.parkingStatus = true
         await user.save()
+        const users = await User.find().select(['-password'])
+        req.io.emit("changeList", users)
         res.status(201).send({
           success: true,
           message: 'Created ticket successfully',
@@ -56,7 +67,7 @@ module.exports.createTicket = async (req, res) => {
   }
 };
 
-module.exports.payTicket = async (req, res) => {
+exports.payTicket = async (req, res) => {
   try {
     const { userId, randomCheck } = req.body;
 
@@ -70,7 +81,6 @@ module.exports.payTicket = async (req, res) => {
 
     const checkTicket = sortedTickets[0]
 
-    const user = await User.findOne({ ID: userId })
   } catch (err) {
     res.status(500).json({
       error: err,
