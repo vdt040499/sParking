@@ -40,12 +40,12 @@ exports.createTicket = async (req, res) => {
 
         const ticket = new Ticket({
           randomCheck: randomCheck,
-          user: user._id
+          createdby: user._id
         });
 
         await ticket.save()
-        const currentTicket = await Ticket.findOne({ user: user._id })
-        user.tickets.push(currentTicket._id)
+        const currentTicket = await Ticket.findOne({ createdby: user._id })
+        await user.tickets.push(currentTicket._id)
         user.parkingStatus = true
         await user.save()
         const users = await User.find().select(['-password'])

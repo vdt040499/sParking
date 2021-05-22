@@ -20,7 +20,6 @@ exports.signup = async (req, res) => {
         message: 'User exists',
       });
     } else {
-      console.log(req.body.email);
       const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
       const user = new User({

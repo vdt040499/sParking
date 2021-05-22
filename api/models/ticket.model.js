@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
-const productSchema = mongoose.Schema({
+const ticketSchema = mongoose.Schema({
     randomCheck: {type: String, require: true},
-    user: {type: mongoose.Schema.Types.ObjectId, required: true}
+    createdby: {type: mongoose.Schema.Types.ObjectId, required: true}
 }, { timestamps: true });
 
-module.exports = mongoose.model('Ticket', productSchema);
+module.exports = mongoose.model('Ticket', ticketSchema);

@@ -22,6 +22,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketio(server);
 
+//Get current the number of tickets
 const getCurNumOfTic = async () => {
   const today = moment().startOf('day')
 
@@ -35,6 +36,47 @@ const getCurNumOfTic = async () => {
   return tickets
 }
 
+//Get the number of tickets for specific date
+const getSpecNumOfTic = async (day, month, year) => {
+  const specDate = `${year}-${month}-${day}`
+  const tickets = await Ticket.find({
+    createdAt: {
+      $gte: new Date(new Date(specDate).setHours(00, 00, 00)),
+      $lt: new Date(new Date(specDate).setHours(23, 59, 59))
+    }
+  })
+
+  return tickets
+}
+
+//Get array of dates for 7 days ago
+const getSevenDatesArr = () => {
+  const dateArr = []
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(Date.now() - (7 - i) * 24 * 60 * 60 * 1000)
+    const dateObj = {
+      day: date.getDate(),
+      month: date.getMonth() + 1,
+      year: date.getFullYear()
+    }
+    dateArr.push(dateObj)
+  }
+
+  return dateArr
+}
+
+//Get the number of tickets for last weeks
+const getNumOfTicFLW = async () => {
+  const NumOfTicArr = []
+  const dateArr = getSevenDatesArr()
+  for (let i = 0; i < dateArr.length; i++) {
+      const ticket = await getSpecNumOfTic(dateArr[i].day, dateArr[i].month, dateArr[i].year)
+      NumOfTicArr.push(ticket.length)
+  }
+
+  return NumOfTicArr
+}
+
 io.on('connection', (socket) => {
   console.log('We have a new connection!!!')
   
@@ -42,8 +84,10 @@ io.on('connection', (socket) => {
   socket.on('initial', async (callback) => {
     const users = await User.find().select(['-password']);
     const curTickets = await getCurNumOfTic()
+    const dateArr = getSevenDatesArr().map(item => `${item.day}/${item.month}`)
+    const lastTicketArr = await getNumOfTicFLW()
 
-    callback(users, curTickets)
+    callback(users, curTickets, dateArr, lastTicketArr)
   })
 
   socket.on('disconnect', () => {
