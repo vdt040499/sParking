@@ -6,6 +6,8 @@ const moment = require('moment');
 const User = require('../models/user.model');
 const Ticket = require('../models/ticket.model');
 
+const { getCurNumOfTic } = require('../../utils/ticket')
+
 exports.getCurNumOfTic = async (req, res, next) => {
   try {
     const today = moment().startOf('day')
@@ -48,8 +50,13 @@ exports.createTicket = async (req, res) => {
         await user.tickets.push(currentTicket._id)
         user.parkingStatus = true
         await user.save()
+
+        // Update date on app
         const users = await User.find().select(['-password'])
-        req.io.emit("changeList", users)
+        const curTickets = await getCurNumOfTic()
+        req.io.emit("changeList", users, curTickets)
+
+
         res.status(201).send({
           success: true,
           message: 'Created ticket successfully',
