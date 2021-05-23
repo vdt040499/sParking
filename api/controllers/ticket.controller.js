@@ -5,26 +5,9 @@ const moment = require('moment');
 
 const User = require('../models/user.model');
 const Ticket = require('../models/ticket.model');
+const Space = require('../models/space.model')
 
 const { getCurNumOfTic } = require('../../utils/ticket')
-
-exports.getCurNumOfTic = async (req, res, next) => {
-  try {
-    const today = moment().startOf('day')
-
-    const tickets = await Ticket.find({
-      createdAt: {
-        $gte: today.toDate(),
-        $lte: moment(today).endOf('day').toDate()
-      }
-    })
-    res.json(tickets);
-  } catch (err) {
-    res.status(500).json({
-      error: err,
-    });
-  }
-};
 
 exports.createTicket = async (req, res) => {
   try {
@@ -54,7 +37,12 @@ exports.createTicket = async (req, res) => {
         // Update date on app
         const users = await User.find().select(['-password'])
         const curTickets = await getCurNumOfTic()
-        req.io.emit("changeList", users, curTickets)
+        const space = await Space.findOne({ name: 'UIT' })
+        space.parked += 1
+        space.avai -= 1
+        await space.save()
+        const updatedSpace = await Space.findOne({ name: 'UIT' })
+        req.io.emit("changeList", users, curTickets, updatedSpace)
 
 
         res.status(201).send({

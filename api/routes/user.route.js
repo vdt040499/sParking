@@ -51,8 +51,6 @@ router.post('/forgotpasswordcheck', UsersController.forgotPassCheck);
 
 router.get('/getuser/:userId', UsersController.getUser);
 
-router.put('/:userId/changestatus', UsersController.changeParkingStatus);
-
 // Payment
 
 router.get('/moneysource/:userId', UsersController.getMoneySource);

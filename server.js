@@ -13,9 +13,36 @@ const { getCurNumOfTic, getSevenDatesArr, getNumOfTicFLW } = require('./utils/ti
 const port = process.env.PORT || 5000;
 
 const User = require('./api/models/user.model');
+const Space = require('./api/models/space.model');
 
 //Content
 const app = express();
+
+// Init space
+const initSpace = async () => {
+  const spaces = await Space.find();
+  const date = new Date()
+
+  if (spaces.length  === 0) {
+    const space = new Space({
+      name: 'UIT',
+      parked: 0,
+      avai: 500
+    })
+    await space.save()
+  } else {
+    const space = await Space.findOne({ name: 'UIT' });
+    const date = new Date()
+    const spaceDate = new Date(space.date)
+
+    if (spaceDate.getDate() !== date.getDate() || spaceDate.getMonth() !== date.getMonth() || spaceDate.getFullYear() !== date.getFullYear()) {
+      space.parked = 0;
+      space.avai = 500;
+      space.date = new Date()
+      await space.save()
+    }
+  }
+}
 
 //Create a server
 const server = http.createServer(app);
@@ -26,12 +53,14 @@ io.on('connection', (socket) => {
   
   // Init data
   socket.on('initial', async (callback) => {
+    initSpace()
     const users = await User.find().select(['-password']);
     const curTickets = await getCurNumOfTic()
     const dateArr = getSevenDatesArr().map(item => `${item.day}/${item.month}`)
     const lastTicketArr = await getNumOfTicFLW()
+    const space = await Space.findOne({ name: 'UIT' });
 
-    callback(users, curTickets, dateArr, lastTicketArr)
+    callback(users, curTickets, dateArr, lastTicketArr, space)
   })
 
   socket.on('disconnect', () => {

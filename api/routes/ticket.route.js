@@ -43,7 +43,6 @@ const User = require('../models/user.model');
 
 const TicketsController = require('../controllers/ticket.controller');
 
-router.get('/', TicketsController.getCurNumOfTic);
 router.post('/:userId', TicketsController.createTicket);
 router.post('/payticket/:ticketId/:userId', multer({ storage: storageForPay }).single('plateForPay'), TicketsController.payTicket);
 

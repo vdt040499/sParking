@@ -496,22 +496,3 @@ exports.getHistory = async (req, res) => {
     });
   }
 };
-
-exports.changeParkingStatus = async (req, res) => {
-  try {
-    const updateUser = await User.findById(req.params.userId);
-    const previousStatus = updateUser.parkingStatus;
-    const updatedUser = await User.findByIdAndUpdate(req.params.userId, { parkingStatus: !previousStatus })
-    const users = await User.find().select(['-password']);
-    if (updatedUser) {
-      req.io.emit("changeList", users)
-      res.status(200).json({
-        message: 'Successfully'
-      });
-    }
-  } catch (err) {
-    res.status(500).json({
-      error: err,
-    });
-  }
-}
