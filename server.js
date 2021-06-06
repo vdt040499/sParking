@@ -10,7 +10,7 @@ const socketio = require('socket.io');
 const { getCurNumOfTic, getSevenDatesArr, getNumOfTicFLW } = require('./utils/ticket')
 
 //Define port
-const port = process.env.PORT || 5000;
+const port = process.env.PORT;
 
 const User = require('./api/models/user.model');
 const Space = require('./api/models/space.model');

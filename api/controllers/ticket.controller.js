@@ -35,6 +35,7 @@ exports.createTicket = async (req, res) => {
         await user.save()
 
         // Update date on app
+        const userResponse = await User.findOne({ ID: userId }).select(['username', 'email', 'plate', 'position', 'ID']);
         const users = await User.find().select(['-password'])
         const curTickets = await getCurNumOfTic()
         const space = await Space.findOne({ name: 'UIT' })
@@ -49,6 +50,7 @@ exports.createTicket = async (req, res) => {
           success: true,
           message: 'Created ticket successfully',
           ticket: ticket,
+          user: userResponse
         });
       }
     } else {
