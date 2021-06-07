@@ -35,6 +35,8 @@ exports.createTicket = async (req, res) => {
         await user.save()
 
         // Update date on app
+        const ticketResponse = await Ticket.findOne({ randomCheck: randomCheck }).select(['randomCheck']);
+        console.log(ticketResponse)
         const userResponse = await User.findOne({ ID: userId }).select(['username', 'email', 'plate', 'position', 'ID']);
         const users = await User.find().select(['-password'])
         const curTickets = await getCurNumOfTic()
@@ -49,7 +51,7 @@ exports.createTicket = async (req, res) => {
         res.status(201).send({
           success: true,
           message: 'Created ticket successfully',
-          ticket: ticket,
+          ticket: ticketResponse,
           user: userResponse
         });
       }
@@ -66,21 +68,43 @@ exports.createTicket = async (req, res) => {
 
 exports.payTicket = async (req, res) => {
   try {
-    const { userId, randomCheck } = req.body;
-
+    const userId = req.params.userId
     const user = await User.findOne({ ID: userId })
+    const { plate } = req.body;
+    const latestTicket = await Ticket.findOne({ createdby: user._id }).sort({'createdAt': -1})
 
-    const tickets = user.tickets
+    const checkPlate = await bcrypt.compare(plate, latestTicket.randomCheck)
 
-    const sortedTickets = tickets.sort((a, b) => {
-      return new Date(b.createdAt) - new Date(a.createAt)
-    })
+    if (checkPlate) {
+      // Update data on app
+      user.parkingStatus = false
+      await user.save()
+      const userResponse = await User.findOne({ ID: userId }).select(['username', 'email', 'plate', 'position', 'ID']);
+      const users = await User.find().select(['-password'])
+      const curTickets = await getCurNumOfTic()
+      const space = await Space.findOne({ name: 'UIT' })
+      space.parked -= 1
+      space.avai += 1
+      await space.save()
+      const updatedSpace = await Space.findOne({ name: 'UIT' })
+      req.io.emit("changeList", users, curTickets, updatedSpace)
 
-    const checkTicket = sortedTickets[0]
+
+      res.status(200).json({
+        success: true,
+        user: userResponse,
+        ticket: latestTicket
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: 'Please scan the QR code again'
+      });
+    }
 
   } catch (err) {
     res.status(500).json({
-      error: err,
+      error: err.toString(),
     });
   }
 };

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const ticketSchema = mongoose.Schema({
-    randomCheck: {type: String, require: true},
+    randomCheck: {type: String, require: true, unique: true},
     createdby: {type: mongoose.Schema.Types.ObjectId, required: true}
 }, { timestamps: true });
 
