@@ -16,7 +16,7 @@ exports.signup = async (req, res) => {
   try {
     const user = await User.find({ email: req.body.email });
     if (user.length >= 1) {
-      res.status(409).json({
+      res.status(401).json({
         message: 'User exists',
       });
     } else {
@@ -35,7 +35,7 @@ exports.signup = async (req, res) => {
       user.save();
 
       res.status(201).json({
-        message: 'Created User',
+        message: 'Created user successfully',
         user: user,
       });
     }
@@ -51,7 +51,7 @@ exports.login = async (req, res) => {
   try {
     const user = await User.findOne({ email: req.body.email });
     if (!user) {
-      res.status(400).json({
+      res.status(401).json({
         message: 'User does not exist',
       });
       console.log("CANT FIND USER")
@@ -63,7 +63,7 @@ exports.login = async (req, res) => {
       
       console.log(user);
       if (!passwordValid) {
-        res.status(500).json({
+        res.status(401).json({
           message: 'Wrong password',
         });
       } else {

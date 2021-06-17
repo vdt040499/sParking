@@ -6,8 +6,8 @@ const userSchema = mongoose.Schema({
   password: { type: String, required: true },
   oldpass: { type: String, required: false },
   newpass: { type: String, required: false },
-  ID: { type: String, required: true },
-  position: { type: String, required: true },
+  ID: { type: String, required: false },
+  position: { type: String, required: false },
   email: {
     type: String,
     required: true,
