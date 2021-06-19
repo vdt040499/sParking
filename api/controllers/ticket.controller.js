@@ -7,7 +7,7 @@ const User = require('../models/user.model');
 const Ticket = require('../models/ticket.model');
 const Space = require('../models/space.model')
 
-const { getCurNumOfTic } = require('../../utils/ticket')
+const { getCurNumOfTic, getAllTickets } = require('../../utils/ticket')
 
 exports.createTicket = async (req, res) => {
   try {
@@ -40,12 +40,13 @@ exports.createTicket = async (req, res) => {
         const userResponse = await User.findOne({ ID: userId }).select(['username', 'email', 'plate', 'position', 'ID']);
         const users = await User.find().select(['-password'])
         const curTickets = await getCurNumOfTic()
+        const allTickets = await getAllTickets()
         const space = await Space.findOne({ name: 'UIT' })
         space.parked += 1
         space.avai -= 1
         await space.save()
         const updatedSpace = await Space.findOne({ name: 'UIT' })
-        req.io.emit("changeList", users, curTickets, updatedSpace)
+        req.io.emit("changeList", users, curTickets, allTickets, updatedSpace)
 
 
         res.status(201).send({
@@ -82,12 +83,13 @@ exports.payTicket = async (req, res) => {
       const userResponse = await User.findOne({ ID: userId }).select(['username', 'email', 'plate', 'position', 'ID']);
       const users = await User.find().select(['-password'])
       const curTickets = await getCurNumOfTic()
+      const allTickets = await getAllTickets()
       const space = await Space.findOne({ name: 'UIT' })
       space.parked -= 1
       space.avai += 1
       await space.save()
       const updatedSpace = await Space.findOne({ name: 'UIT' })
-      req.io.emit("changeList", users, curTickets, updatedSpace)
+      req.io.emit("changeList", users, curTickets, allTickets, updatedSpace)
 
 
       res.status(200).json({
@@ -108,3 +110,20 @@ exports.payTicket = async (req, res) => {
     });
   }
 };
+
+exports.getOwnTickets = async (req, res) => {
+  try {
+    const tickets = await Ticket.find({ createdby: req.params.userId })
+
+    const sortedTickets = tickets.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+
+    res.status(200).json({
+      success: true,
+      tickets: sortedTickets
+    })
+  } catch (error) {
+    res.status(500).json({
+      error: err.toString()
+    })
+  }
+}

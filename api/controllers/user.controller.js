@@ -54,20 +54,17 @@ exports.login = async (req, res) => {
       res.status(401).json({
         message: 'User does not exist',
       });
-      console.log("CANT FIND USER")
     } else {
       const passwordValid = await bcrypt.compare(
         req.body.password,
         user.password
       ); //true or false
-      
-      console.log(user);
+
       if (!passwordValid) {
         res.status(401).json({
           message: 'Wrong password',
         });
       } else {
-        console.log("FIND TOKEN");
         const token = jwt.sign(
           {
             email: user.email,
@@ -78,7 +75,6 @@ exports.login = async (req, res) => {
             expiresIn: '7d',
           }
         );
-        console.log(token);
         res.status(200).json({
           _id: user._id,
           username: user.username,
@@ -496,3 +492,38 @@ exports.getHistory = async (req, res) => {
     });
   }
 };
+
+exports.getUsersWithMS = async (req, res) => {
+  try {
+    const users = await User.find().select(['-password', '-tickets'])
+    const mosos = await MoneySource.find()
+    const mappedUsers = users.map(user => {
+      const newUser = { 
+        _id: user.Id, 
+        username: user.username, 
+        ID: user.ID, 
+        balance: user.balance, 
+        parkingStatus: user.parkingStatus,
+        position: user.position,
+        email: user.email,
+        plate: user.plate
+      }
+      mosos.forEach(moso => {
+        if (moso.user.toString() == user._id.toString()) {
+          newUser.moneySource = moso
+        }
+      })
+
+      return newUser
+    })
+
+    res.status(200).json({
+      success: true,
+      users: mappedUsers
+    })
+  } catch (err) {
+    res.status(500).json({
+      error: err
+    })
+  }
+}

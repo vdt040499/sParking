@@ -33,11 +33,14 @@ const upload = multer({
   fileFilter: fileFilter,
 });
 
+
 router.post('/signup', UsersController.signup);
 
 // router.post('/:userId/uploadimage', upload.single('userImage'), UsersController.uploadImage);
 
 router.post('/login', UsersController.login);
+
+router.get('/getuserswms', UsersController.getUsersWithMS);
 
 router.post('/:userId/updateuser', UsersController.update);
 
@@ -50,6 +53,7 @@ router.post('/forgotpassword', UsersController.forgotPass);
 router.post('/forgotpasswordcheck', UsersController.forgotPassCheck);
 
 router.get('/getuser/:userId', UsersController.getUser);
+
 
 // Payment
 

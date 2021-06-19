@@ -7,7 +7,7 @@ const session = require('express-session');
 const cors = require('cors');
 const socketio = require('socket.io');
 
-const { getCurNumOfTic, getSevenDatesArr, getNumOfTicFLW } = require('./utils/ticket')
+const { getCurNumOfTic, getAllTickets, getSevenDatesArr, getNumOfTicFLW } = require('./utils/ticket')
 
 //Define port
 const port = process.env.PORT;
@@ -54,13 +54,14 @@ io.on('connection', (socket) => {
   // Init data
   socket.on('initial', async (callback) => {
     initSpace()
-    const users = await User.find().select(['-password']);
+    const users = await getUsersWithMS()
     const curTickets = await getCurNumOfTic()
+    const allTickets = await getAllTickets()
     const dateArr = getSevenDatesArr().map(item => `${item.day}/${item.month}`)
     const lastTicketArr = await getNumOfTicFLW()
     const space = await Space.findOne({ name: 'UIT' });
 
-    callback(users, curTickets, dateArr, lastTicketArr, space)
+    callback(users, curTickets, allTickets, dateArr, lastTicketArr, space)
   })
 
   socket.on('disconnect', () => {
@@ -71,6 +72,7 @@ io.on('connection', (socket) => {
 //Import file routes config ./api/routes/
 const userRoutes = require('./api/routes/user.route');
 const ticketRoutes = require('./api/routes/ticket.route');
+const { getUsersWithMS } = require('./utils/user');
 
 //Connect to DB
 

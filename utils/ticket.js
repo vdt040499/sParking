@@ -1,5 +1,6 @@
 const moment = require('moment')
 const Ticket = require('../api/models/ticket.model')
+const User = require('../api/models/user.model')
 
 //Get current the number of tickets
 const getCurNumOfTic = async () => {
@@ -56,4 +57,27 @@ const getNumOfTicFLW = async () => {
   return NumOfTicArr
 }
 
-module.exports = { getCurNumOfTic, getSpecNumOfTic, getSevenDatesArr, getNumOfTicFLW }
+// Get all tickets
+const getAllTickets = async () => {
+  const tickets = await Ticket.find().select(['-randomCheck'])
+  const sortedTickets = tickets.sort((a, b) => new Date(b.createdAt - a.createdAt))
+  const users = await User.find().select(['-password', '-tickets'])
+  const mappedTickets = sortedTickets.map(ticket => {
+    const newTicket = { 
+      _id: ticket._id,
+      createdby: ticket.createdby,
+      createdAt: ticket.createdAt
+    }
+    users.forEach(user => {
+      if (user._id.toString() == ticket.createdby.toString()) {
+        newTicket.user = user
+      }
+    })
+
+    return newTicket
+  })
+
+  return mappedTickets
+}
+
+module.exports = { getCurNumOfTic, getAllTickets, getSpecNumOfTic, getSevenDatesArr, getNumOfTicFLW }
