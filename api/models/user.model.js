@@ -19,7 +19,6 @@ const userSchema = mongoose.Schema({
   tickets: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Ticket' }],
   amount: { type: Number, required: false },
   resetToken: { type: String, required: false },
-  amount: { type: Number, required: false },
   resetTokenExpires: { type: Date, required: false },
   balance: {
     type: Number,

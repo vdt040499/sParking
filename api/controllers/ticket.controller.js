@@ -7,7 +7,8 @@ const User = require('../models/user.model');
 const Ticket = require('../models/ticket.model');
 const Space = require('../models/space.model')
 
-const { getCurNumOfTic, getAllTickets } = require('../../utils/ticket')
+const { getCurNumOfTic, getAllTickets, getOwnTickets } = require('../../utils/ticket');
+const { getUser } = require('../../utils/user');
 
 exports.createTicket = async (req, res) => {
   try {
@@ -25,6 +26,7 @@ exports.createTicket = async (req, res) => {
 
         const ticket = new Ticket({
           randomCheck: randomCheck,
+          plate: user.plate,
           createdby: user._id
         });
 
@@ -34,9 +36,8 @@ exports.createTicket = async (req, res) => {
         user.parkingStatus = true
         await user.save()
 
-        // Update date on app
+        // Update data on admin
         const ticketResponse = await Ticket.findOne({ randomCheck: randomCheck }).select(['randomCheck']);
-        console.log(ticketResponse)
         const userResponse = await User.findOne({ ID: userId }).select(['username', 'email', 'plate', 'position', 'ID']);
         const users = await User.find().select(['-password'])
         const curTickets = await getCurNumOfTic()
@@ -48,6 +49,10 @@ exports.createTicket = async (req, res) => {
         const updatedSpace = await Space.findOne({ name: 'UIT' })
         req.io.emit("changeList", users, curTickets, allTickets, updatedSpace)
 
+        //Update data on app
+        const info = await getUser(user._id)
+        const tickets = await getOwnTickets(user._id)
+        req.io.emit("updateApp", info, tickets)
 
         res.status(201).send({
           success: true,
@@ -77,8 +82,9 @@ exports.payTicket = async (req, res) => {
     const checkPlate = await bcrypt.compare(plate, latestTicket.randomCheck)
 
     if (checkPlate) {
-      // Update data on app
+      // Update data on admin
       user.parkingStatus = false
+      user.balance -= 5000
       await user.save()
       const userResponse = await User.findOne({ ID: userId }).select(['username', 'email', 'plate', 'position', 'ID']);
       const users = await User.find().select(['-password'])
@@ -91,6 +97,10 @@ exports.payTicket = async (req, res) => {
       const updatedSpace = await Space.findOne({ name: 'UIT' })
       req.io.emit("changeList", users, curTickets, allTickets, updatedSpace)
 
+      //Update data on app
+      const info = await getUser(user._id)
+      const tickets = await getOwnTickets(user._id)
+      req.io.emit("updateApp", info, tickets)
 
       res.status(200).json({
         success: true,

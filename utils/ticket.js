@@ -80,4 +80,12 @@ const getAllTickets = async () => {
   return mappedTickets
 }
 
-module.exports = { getCurNumOfTic, getAllTickets, getSpecNumOfTic, getSevenDatesArr, getNumOfTicFLW }
+// Get own tikcets
+const getOwnTickets = async (userId) => {
+  const tickets = await Ticket.find({ createdby: userId })
+  const sortedTickets = tickets.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+
+  return sortedTickets
+}
+
+module.exports = { getCurNumOfTic, getAllTickets, getSpecNumOfTic, getSevenDatesArr, getNumOfTicFLW, getOwnTickets }

@@ -51,8 +51,9 @@ const io = socketio(server);
 io.on('connection', (socket) => {
   console.log('We have a new connection!!!')
   
-  // Init data
+  // Init data for admin
   socket.on('initial', async (callback) => {
+    console.log('We have connection with app')
     initSpace()
     const users = await getUsersWithMS()
     const curTickets = await getCurNumOfTic()
@@ -62,6 +63,10 @@ io.on('connection', (socket) => {
     const space = await Space.findOne({ name: 'UIT' });
 
     callback(users, curTickets, allTickets, dateArr, lastTicketArr, space)
+  })
+
+  socket.on('initialApp', () => {
+    console.log('We have connection with app')
   })
 
   socket.on('disconnect', () => {
