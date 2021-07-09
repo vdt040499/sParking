@@ -113,8 +113,10 @@ exports.update = async (req, res) => {
 
     const ID = await User.find({ ID: req.body.ID, _id: {'$ne': currentUser._id} })
 
+    const plate = await User.find({ plate: req.body.plate, _id: {'$ne': currentUser._id} })
+
+
     if (users.length >= 1) {
-      console.log(users)
       return res.status(401).json({
         message: 'This email already exists'
       })
@@ -123,6 +125,12 @@ exports.update = async (req, res) => {
     if (ID.length >= 1) {
       return res.status(401).json({
         message: 'This ID already exists'
+      })
+    }
+
+    if (plate.length >= 1) {
+      return res.status(401).json({
+        message: 'This plate already exists'
       })
     }
 
