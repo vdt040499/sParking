@@ -57,6 +57,8 @@ router.get('/getuser/:userId', UsersController.getUser);
 
 // Payment
 
+router.post('/moneysource/confirm', UsersController.confirmPass);
+
 router.get('/moneysource/:userId', UsersController.getMoneySource);
 
 router.post('/moneysource/:userId', UsersController.createMoneySource);

@@ -14,11 +14,26 @@ const e = require('express');
 
 exports.signup = async (req, res) => {
   try {
-    const user = await User.find({ email: req.body.email });
-    if (user.length >= 1) {
-      res.status(401).json({
-        message: 'User exists',
-      });
+    const user = await User.find({ email: req.body.email })
+    const plate = await User.find({ plate: req.body.plate })
+    const ID = await User.find({ ID: req.body.ID })
+
+    if (user.length >= 1 || plate.length >= 1 || ID.length >= 1) {
+      if (user.length >= 1) {
+        return res.status(401).json({
+          message: 'User exists',
+        })
+      } 
+      if (plate.length >= 1) {
+        return res.status(401).json({
+          message: 'Plate exists',
+        })
+      }
+      if (ID.length >= 1) {
+        return res.status(401).json({
+          message: 'ID exists',
+        })
+      }
     } else {
       const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
@@ -340,6 +355,33 @@ exports.createMoneySource = async (req, res) => {
     });
   }
 };
+
+exports.confirmPass = async (req, res) => {
+  try {
+    const { userId, password } = req.body
+
+    const user = await User.findById(userId)
+
+
+    const validPassword = await bcrypt.compare(password, user.password)
+
+    if (!validPassword) {
+      res.status(401).json({
+        success: false,
+        message: "Wrong password"
+      })
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'OK'
+    })
+  } catch (err) {
+    res.status(500).json({
+      error: err
+    })
+  }
+}
 
 exports.topup = async (req, res) => {
   try {
