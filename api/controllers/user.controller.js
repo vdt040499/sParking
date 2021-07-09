@@ -188,6 +188,10 @@ exports.changePass = async (req, res) => {
         message: 'Both entries for new password must match',
       });
     } else if (await bcrypt.compare(req.body.oldpass, user.password)) {
+      const hashedPassword = await bcrypt.hash(req.body.newpass, 10)
+      user.password = hashedPassword
+      await user.save()
+
       res.status(200).json({
         message: 'Change password successfully',
       });
