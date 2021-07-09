@@ -21,17 +21,17 @@ exports.signup = async (req, res) => {
     if (user.length >= 1 || plate.length >= 1 || ID.length >= 1) {
       if (user.length >= 1) {
         return res.status(401).json({
-          message: 'User exists',
+          message: 'This email already exists',
         })
       } 
       if (plate.length >= 1) {
         return res.status(401).json({
-          message: 'Plate exists',
+          message: 'This plate already exists',
         })
       }
       if (ID.length >= 1) {
         return res.status(401).json({
-          message: 'ID exists',
+          message: 'This ID already exists',
         })
       }
     } else {
@@ -107,6 +107,25 @@ exports.login = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
+    const currentUser = await User.findById(req.params.userId)
+
+    const users = await User.find({ email: req.body.email, _id: {'$ne': currentUser._id} })
+
+    const ID = await User.find({ ID: req.body.ID, _id: {'$ne': currentUser._id} })
+
+    if (users.length >= 1) {
+      console.log(users)
+      return res.status(401).json({
+        message: 'This email already exists'
+      })
+    }
+
+    if (ID.length >= 1) {
+      return res.status(401).json({
+        message: 'This ID already exists'
+      })
+    }
+
     const user = await User.findByIdAndUpdate(req.params.userId, req.body, {
       new: true,
       runValidators: true,
