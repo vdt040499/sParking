@@ -555,13 +555,15 @@ exports.getHistory = async (req, res) => {
   try {
     const doc = await Transaction.find({ user: req.params.userId });
 
+    const sortedDoc = doc.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+
     res.status(200).json({
-      results: doc.length,
-      transaction: doc,
+      results: sortedDoc.length,
+      transaction: sortedDoc,
     });
   } catch (err) {
     res.status(500).json({
-      error: err,
+      error: err.toString(),
     });
   }
 };
