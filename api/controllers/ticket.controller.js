@@ -99,9 +99,13 @@ exports.payTicket = async (req, res) => {
 
     if (checkPlate) {
       // Update data on admin
+      latestTicket.updatedAt = new Date()
+      await latestTicket.save()
+
       user.parkingStatus = false
       user.balance -= 5000
       await user.save()
+      
       const userResponse = await User.findOne({ ID: userId }).select(['username', 'email', 'plate', 'position', 'ID']);
       const users = await User.find().select(['-password'])
       const curTickets = await getCurNumOfTic()

@@ -16,11 +16,29 @@ const { validateEmail } = require('../../utils/emailValidation');
 exports.signup = async (req, res) => {
   try {
 
+    // Validation
+
     if (!validateEmail(req.body.email)) {
       return res.status(400).json({
         message: 'Invalid email'
       })
     }
+
+    if (req.body.position === 'student') {
+      if (req.body.ID.length !== 8) {
+        return res.status(400).json({
+          message: 'Invalid ID'
+        })
+      }
+    }
+
+    if (req.body.position === 'teacher') {
+      if (req.body.ID.length !== 5) {
+        return res.status(400).json({
+          message: 'Invalid ID'
+        })
+      }
+    } 
 
     const user = await User.find({ email: req.body.email })
     const plate = await User.find({ plate: req.body.plate })
@@ -116,10 +134,28 @@ exports.login = async (req, res) => {
 exports.update = async (req, res) => {
   try {
 
+    // Validation
+
     if (!validateEmail(req.body.email)) {
       return res.status(400).json({
         message: 'Invalid email'
       })
+    }
+
+    if (req.body.position === 'student') {
+      if (req.body.ID.length !== 8) {
+        return res.status(400).json({
+          message: 'Invalid ID'
+        })
+      }
+    }
+
+    if (req.body.position === 'teacher') {
+      if (req.body.ID.length !== 5) {
+        return res.status(400).json({
+          message: 'Invalid ID'
+        })
+      }
     }
 
     const currentUser = await User.findById(req.params.userId)
