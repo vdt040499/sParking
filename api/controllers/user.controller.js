@@ -38,10 +38,22 @@ exports.signup = async (req, res) => {
           message: 'Invalid ID'
         })
       }
-    } 
+    }
+
+    let formatedPlate = req.body.plate
+    formatedPlate = formatedPlate.toLowerCase().replace(/\s+/g, "")
+    
+    if (formatedPlate.length < 8 || formatedPlate.length > 9 || /[a-z]/.test(formatedPlate.slice(0, 2)) || /[a-z]/.test(formatedPlate.slice(4))) {
+      return res.status(400).json({
+        message: 'Invalid plate'
+      })
+    }
+
+    formatedPlate = formatedPlate.toUpperCase()
+    formatedPlate = `${formatedPlate.slice(0, 4)} ${formatedPlate.slice(4)}`
 
     const user = await User.find({ email: req.body.email })
-    const plate = await User.find({ plate: req.body.plate })
+    const plate = await User.find({ plate: formatedPlate })
     const ID = await User.find({ ID: req.body.ID })
 
     if (user.length >= 1 || plate.length >= 1 || ID.length >= 1) {
@@ -70,7 +82,7 @@ exports.signup = async (req, res) => {
         ID: req.body.ID,
         position: req.body.position,
         email: req.body.email,
-        plate: req.body.plate
+        plate: formatedPlate
       });
 
       user.save();
@@ -136,7 +148,7 @@ exports.update = async (req, res) => {
 
     // Validation
 
-    if (!validateEmail(req.body.email)) {
+    if (req.body.email && !validateEmail(req.body.email)) {
       return res.status(400).json({
         message: 'Invalid email'
       })
@@ -158,13 +170,27 @@ exports.update = async (req, res) => {
       }
     }
 
+    let formatedPlate = req.body.plate
+    formatedPlate = formatedPlate.toLowerCase().replace(/\s+/g, "")
+    
+    if (formatedPlate.length < 8 || formatedPlate.length > 9 || /[a-z]/.test(formatedPlate.slice(0, 2)) || /[a-z]/.test(formatedPlate.slice(4))) {
+      return res.status(400).json({
+        message: 'Invalid plate'
+      })
+    }
+
+    formatedPlate = formatedPlate.toUpperCase()
+    formatedPlate = `${formatedPlate.slice(0, 4)} ${formatedPlate.slice(4)}`
+    req.body.plate = formatedPlate
+    console.log(req.body.plate)
+
     const currentUser = await User.findById(req.params.userId)
 
     const users = await User.find({ email: req.body.email, _id: {'$ne': currentUser._id} })
 
     const ID = await User.find({ ID: req.body.ID, _id: {'$ne': currentUser._id} })
 
-    const plate = await User.find({ plate: req.body.plate, _id: {'$ne': currentUser._id} })
+    const plate = await User.find({ plate: formatedPlate, _id: {'$ne': currentUser._id} })
 
 
     if (users.length >= 1) {
