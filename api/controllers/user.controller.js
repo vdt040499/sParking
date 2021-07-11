@@ -11,9 +11,17 @@ const User = require('../models/user.model');
 const MoneySource = require('../models/moneysource.model');
 const Transaction = require('../models/transactionhistory');
 const e = require('express');
+const { validateEmail } = require('../../utils/emailValidation');
 
 exports.signup = async (req, res) => {
   try {
+
+    if (!validateEmail(req.body.email)) {
+      return res.status(400).json({
+        message: 'Invalid email'
+      })
+    }
+
     const user = await User.find({ email: req.body.email })
     const plate = await User.find({ plate: req.body.plate })
     const ID = await User.find({ ID: req.body.ID })
@@ -107,6 +115,13 @@ exports.login = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
+
+    if (!validateEmail(req.body.email)) {
+      return res.status(400).json({
+        message: 'Invalid email'
+      })
+    }
+
     const currentUser = await User.findById(req.params.userId)
 
     const users = await User.find({ email: req.body.email, _id: {'$ne': currentUser._id} })
