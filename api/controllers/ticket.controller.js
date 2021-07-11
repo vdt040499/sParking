@@ -22,6 +22,14 @@ exports.createTicket = async (req, res) => {
           message: 'User does not exists',
         });
       } else {
+
+        if (user.parkingStatus) {
+          return res.status(400).json({
+            success: false,
+            message: 'Ticket created for this account'
+          })
+        }
+
         const randomCheck = await bcrypt.hash(user.plate, 10)
 
         const ticket = new Ticket({
@@ -76,6 +84,14 @@ exports.payTicket = async (req, res) => {
   try {
     const userId = req.params.userId
     const user = await User.findOne({ ID: userId })
+
+    if (!user.parkingStatus) {
+      return res.status(400).json({
+        success: false,
+        message: 'Ticket has removed.'
+      })
+    }
+
     const { plate } = req.body;
     const latestTicket = await Ticket.findOne({ createdby: user._id }).sort({'createdAt': -1})
 

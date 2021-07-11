@@ -397,9 +397,9 @@ exports.confirmPass = async (req, res) => {
     const validPassword = await bcrypt.compare(password, user.password)
 
     if (!validPassword) {
-      res.status(401).json({
+      return res.status(401).json({
         success: false,
-        message: "Wrong password"
+        message: "Wrong password! Please enter your password again"
       })
     }
 
