@@ -66,7 +66,9 @@ const getAllTickets = async () => {
     const newTicket = { 
       _id: ticket._id,
       createdby: ticket.createdby,
-      createdAt: ticket.createdAt
+      plate: ticket.plate,
+      createdAt: ticket.createdAt,
+      updatedAt: ticket.updatedAt
     }
     users.forEach(user => {
       if (user._id.toString() == ticket.createdby.toString()) {

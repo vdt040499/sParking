@@ -92,48 +92,55 @@ exports.payTicket = async (req, res) => {
       })
     }
 
-    const { plate } = req.body;
-    const latestTicket = await Ticket.findOne({ createdby: user._id }).sort({'createdAt': -1})
-
-    const checkPlate = await bcrypt.compare(plate, latestTicket.randomCheck)
-
-    if (checkPlate) {
-      // Update data on admin
-      latestTicket.updatedAt = new Date()
-      await latestTicket.save()
-
-      user.parkingStatus = false
-      user.balance -= 5000
-      await user.save()
-      
-      const userResponse = await User.findOne({ ID: userId }).select(['username', 'email', 'plate', 'position', 'ID']);
-      const users = await User.find().select(['-password'])
-      const curTickets = await getCurNumOfTic()
-      const allTickets = await getAllTickets()
-      const space = await Space.findOne({ name: 'UIT' })
-      space.parked -= 1
-      space.avai += 1
-      await space.save()
-      const updatedSpace = await Space.findOne({ name: 'UIT' })
-      req.io.emit("changeList", users, curTickets, allTickets, updatedSpace)
-
-      //Update data on app
-      const info = await getUser(user._id)
-      const tickets = await getOwnTickets(user._id)
-      req.io.emit("updateApp", info, tickets)
-
-      res.status(200).json({
-        success: true,
-        user: userResponse,
-        ticket: latestTicket
-      });
-    } else {
-      res.status(400).json({
+    if (user.balance < 5000) {
+      req.io.emit("paymentError", "You don't have enough money to pay for your ticket. Please check your balance.")
+      return res.status(400).json({
         success: false,
-        message: 'Please scan the QR code again'
-      });
-    }
+        message: 'Not enough money to pay for the ticket'
+      })
+    } else {
+      const { plate } = req.body;
+      const latestTicket = await Ticket.findOne({ createdby: user._id }).sort({'createdAt': -1})
 
+      const checkPlate = await bcrypt.compare(plate, latestTicket.randomCheck)
+
+      if (checkPlate) {
+        // Update data on admin
+        latestTicket.updatedAt = new Date()
+        await latestTicket.save()
+
+        user.parkingStatus = false
+        user.balance -= 5000
+        await user.save()
+        
+        const userResponse = await User.findOne({ ID: userId }).select(['username', 'email', 'plate', 'position', 'ID']);
+        const users = await User.find().select(['-password'])
+        const curTickets = await getCurNumOfTic()
+        const allTickets = await getAllTickets()
+        const space = await Space.findOne({ name: 'UIT' })
+        space.parked -= 1
+        space.avai += 1
+        await space.save()
+        const updatedSpace = await Space.findOne({ name: 'UIT' })
+        req.io.emit("changeList", users, curTickets, allTickets, updatedSpace)
+
+        //Update data on app
+        const info = await getUser(user._id)
+        const tickets = await getOwnTickets(user._id)
+        req.io.emit("updateApp", info, tickets)
+
+        res.status(200).json({
+          success: true,
+          user: userResponse,
+          ticket: latestTicket
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: 'Please scan the QR code again'
+        });
+      }
+    }
   } catch (err) {
     res.status(500).json({
       error: err.toString(),
