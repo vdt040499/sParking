@@ -323,14 +323,14 @@ exports.forgotPass = async (req, res) => {
       const transporter = nodemailer.createTransport({
         service: 'Gmail',
         auth: {
-          user: "sparkingsystem@gmail.com",
-          pass: "3135134162Tom&",
+          user: "sparkingadm@gmail.com",
+          pass: "SparkingAdmin123456",
         },
       });
 
       const mailOptions = {
-        from: 'sparkingsystem@gmail.com',
-        to: user.email,
+        from: "sparkingadm@gmail.com",
+        to: "vdt040499@gmail.com",
         subject: 'Renew your password',
         text: 'To reset your password with: ' + token,
       };
@@ -539,7 +539,8 @@ exports.topup = async (req, res) => {
         }
       } else {
         res.status(409).json({
-          error: json.message,
+          success: false,
+          message: json.message,
         });
       }
     } else {
@@ -571,6 +572,7 @@ exports.withdraw = async (req, res) => {
       if (user) {
         if (user.balance < req.body.amount) {
           res.status(409).json({
+            success: false,
             message:
               'There is not enough money in your account to make this transaction.',
           });
@@ -607,13 +609,15 @@ exports.withdraw = async (req, res) => {
             });
           } else {
             res.status(409).json({
-              error: json.message,
+              success: false,
+              message: json.message,
             });
           }
         }
       } else {
         res.status(409).json({
-          error: json.message,
+          success: false,
+          message: json.message,
         });
       }
     } else {
