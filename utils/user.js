@@ -16,9 +16,10 @@ const getUsersWithMS = async () => {
         plate: user.plate,
         createdAt: user.createdAt
       }
+      newUser.moneySource = []
       mosos.forEach(moso => {
         if (moso.user.toString() == user._id.toString()) {
-          newUser.moneySource = moso
+          newUser.moneySource.push(moso)
         }
       })
 
