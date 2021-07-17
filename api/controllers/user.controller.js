@@ -427,7 +427,7 @@ exports.createMoneySource = async (req, res) => {
       validfrom: req.body.validfrom,
     };
 
-    const api_url = 'http://localhost:8000/bank/checkbankaccount';
+    const api_url = 'https://sparking-banking.herokuapp.com/bank/checkbankaccount';
 
     const response = await fetch(api_url, {
       method: 'POST',
@@ -503,7 +503,7 @@ exports.topup = async (req, res) => {
         amount: req.body.amount,
       };
 
-      const api_url = 'http://localhost:8000/bank/topup';
+      const api_url = 'https://sparking-banking.herokuapp.com/bank/topup';
 
       const response = await fetch(api_url, {
         method: 'POST',
@@ -577,7 +577,7 @@ exports.withdraw = async (req, res) => {
               'There is not enough money in your account to make this transaction.',
           });
         } else {
-          const api_url = 'http://localhost:8000/bank/withdraw';
+          const api_url = 'https://sparking-banking.herokuapp.com/bank/withdraw';
 
           const response = await fetch(api_url, {
             method: 'POST',
