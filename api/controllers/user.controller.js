@@ -170,28 +170,34 @@ exports.update = async (req, res) => {
       }
     }
 
-    let formatedPlate = req.body.plate
-    formatedPlate = formatedPlate.toLowerCase().replace(/\s+/g, "")
-    
-    if (formatedPlate.length < 8 || formatedPlate.length > 9 || /[a-z]/.test(formatedPlate.slice(0, 2)) || /[a-z]/.test(formatedPlate.slice(4))) {
-      return res.status(400).json({
-        message: 'Invalid plate'
-      })
-    }
+    if (req.body.plate) {
+      let formatedPlate = req.body.plate
+      formatedPlate = formatedPlate.toLowerCase().replace(/\s+/g, "")
+      
+      if (formatedPlate.length < 8 || formatedPlate.length > 9 || /[a-z]/.test(formatedPlate.slice(0, 2)) || /[a-z]/.test(formatedPlate.slice(4))) {
+        return res.status(400).json({
+          message: 'Invalid plate'
+        })
+      }
 
-    formatedPlate = formatedPlate.toUpperCase()
-    formatedPlate = `${formatedPlate.slice(0, 4)} ${formatedPlate.slice(4)}`
-    req.body.plate = formatedPlate
-    console.log(req.body.plate)
+      formatedPlate = formatedPlate.toUpperCase()
+      formatedPlate = `${formatedPlate.slice(0, 4)} ${formatedPlate.slice(4)}`
+      req.body.plate = formatedPlate
+
+      const plate = await User.find({ plate: formatedPlate, _id: {'$ne': currentUser._id} })
+
+      if (plate.length >= 1) {
+        return res.status(401).json({
+          message: 'This plate already exists'
+        })
+      }
+    }
 
     const currentUser = await User.findById(req.params.userId)
 
     const users = await User.find({ email: req.body.email, _id: {'$ne': currentUser._id} })
 
     const ID = await User.find({ ID: req.body.ID, _id: {'$ne': currentUser._id} })
-
-    const plate = await User.find({ plate: formatedPlate, _id: {'$ne': currentUser._id} })
-
 
     if (users.length >= 1) {
       return res.status(401).json({
@@ -202,12 +208,6 @@ exports.update = async (req, res) => {
     if (ID.length >= 1) {
       return res.status(401).json({
         message: 'This ID already exists'
-      })
-    }
-
-    if (plate.length >= 1) {
-      return res.status(401).json({
-        message: 'This plate already exists'
       })
     }
 
@@ -227,8 +227,9 @@ exports.update = async (req, res) => {
       });
     }
   } catch (err) {
+    console.log('Error: ', err)
     res.status(500).json({
-      error: err,
+      error: err.toString(),
     });
   }
 };
@@ -330,7 +331,7 @@ exports.forgotPass = async (req, res) => {
 
       const mailOptions = {
         from: "sparkingadm@gmail.com",
-        to: "vdt040499@gmail.com",
+        to: user.email,
         subject: 'Renew your password',
         text: 'To reset your password with: ' + token,
       };
