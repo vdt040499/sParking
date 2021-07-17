@@ -170,6 +170,8 @@ exports.update = async (req, res) => {
       }
     }
 
+    const currentUser = await User.findById(req.params.userId)
+
     if (req.body.plate) {
       let formatedPlate = req.body.plate
       formatedPlate = formatedPlate.toLowerCase().replace(/\s+/g, "")
@@ -192,8 +194,6 @@ exports.update = async (req, res) => {
         })
       }
     }
-
-    const currentUser = await User.findById(req.params.userId)
 
     const users = await User.find({ email: req.body.email, _id: {'$ne': currentUser._id} })
 
