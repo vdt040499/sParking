@@ -52,7 +52,7 @@ exports.createTicket = async (req, res) => {
         const allTickets = await getAllTickets()
         const space = await Space.findOne({ name: 'UIT' })
         space.parked += 1
-        space.avai -= 1
+        space.avai = space.totalSlots - space.parked
         await space.save()
         const updatedSpace = await Space.findOne({ name: 'UIT' })
         req.io.emit("changeList", users, curTickets, allTickets, updatedSpace)
@@ -92,7 +92,8 @@ exports.payTicket = async (req, res) => {
       })
     }
 
-    if (user.balance < 5000) {
+    const space = await Space.findOne({ name: 'UIT' })
+    if (user.balance < space.ticketPrice) {
       req.io.emit("paymentError", "You don't have enough money to pay for your ticket. Please check your balance.")
       return res.status(400).json({
         success: false,
@@ -107,19 +108,19 @@ exports.payTicket = async (req, res) => {
       if (checkPlate) {
         // Update data on admin
         latestTicket.updatedAt = new Date()
+        latestTicket.price = space.ticketPrice
         await latestTicket.save()
 
         user.parkingStatus = false
-        user.balance -= 5000
+        user.balance -= parseInt(space.ticketPrice)
         await user.save()
         
         const userResponse = await User.findOne({ ID: userId }).select(['username', 'email', 'plate', 'position', 'ID']);
         const users = await User.find().select(['-password'])
         const curTickets = await getCurNumOfTic()
         const allTickets = await getAllTickets()
-        const space = await Space.findOne({ name: 'UIT' })
         space.parked -= 1
-        space.avai += 1
+        space.avai = space.totalSlots - space.parked
         await space.save()
         const updatedSpace = await Space.findOne({ name: 'UIT' })
         req.io.emit("changeList", users, curTickets, allTickets, updatedSpace)
