@@ -20,27 +20,20 @@ const app = express();
 
 // Init space
 const initSpace = async () => {
-  const spaces = await Space.find();
-  const date = new Date()
+  const spaces = await Space.find()
 
   if (spaces.length  === 0) {
+    let totalSlots = 500
+    let parked = 0
+    let avai = totalSlots - parked
     const space = new Space({
       name: 'UIT',
-      parked: 0,
-      avai: 500
+      totalSlots,
+      parked,
+      avai,
+      ticketPrice: 5000
     })
     await space.save()
-  } else {
-    const space = await Space.findOne({ name: 'UIT' });
-    const date = new Date()
-    const spaceDate = new Date(space.date)
-
-    if (spaceDate.getDate() !== date.getDate() || spaceDate.getMonth() !== date.getMonth() || spaceDate.getFullYear() !== date.getFullYear()) {
-      space.parked = 0;
-      space.avai = 500;
-      space.date = new Date()
-      await space.save()
-    }
   }
 }
 
@@ -75,9 +68,10 @@ io.on('connection', (socket) => {
 });
 
 //Import file routes config ./api/routes/
-const userRoutes = require('./api/routes/user.route');
-const ticketRoutes = require('./api/routes/ticket.route');
-const { getUsersWithMS } = require('./utils/user');
+const userRoutes = require('./api/routes/user.route')
+const ticketRoutes = require('./api/routes/ticket.route')
+const spaceRoutes = require('./api/routes/space.route')
+const { getUsersWithMS } = require('./utils/user')
 
 //Connect to DB
 
@@ -152,8 +146,9 @@ mongoose
         });
         
         //Routes
-        app.use('/users', userRoutes);
-        app.use('/tickets', ticketRoutes);
+        app.use('/users', userRoutes)
+        app.use('/tickets', ticketRoutes)
+        app.use('/spaces', spaceRoutes)
         
         //Catch 404 errors and forward then to error handler
         app.use((req, res, next) => {
