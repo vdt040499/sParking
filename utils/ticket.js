@@ -57,6 +57,20 @@ const getNumOfTicFLW = async () => {
   return NumOfTicArr
 }
 
+//Get the revenue of tickets for last weeks
+const getRevenueOfTicFLW = async () => {
+  const RevOfTicArr = []
+  const dateArr = getSevenDatesArr()
+  for (let i = 0; i < dateArr.length; i++) {
+      const tickets = await getSpecNumOfTic(dateArr[i].day, dateArr[i].month, dateArr[i].year)
+      const sumRev = tickets.reduce((sum, ticket) => sum += ticket.price, 0)
+      console.log(tickets)
+      RevOfTicArr.push(sumRev)
+  }
+
+  return RevOfTicArr
+}
+
 // Get all tickets
 const getAllTickets = async () => {
   const tickets = await Ticket.find().select(['-randomCheck'])
@@ -67,6 +81,7 @@ const getAllTickets = async () => {
       _id: ticket._id,
       createdby: ticket.createdby,
       plate: ticket.plate,
+      price: ticket.price,
       createdAt: ticket.createdAt,
       updatedAt: ticket.updatedAt
     }
@@ -90,4 +105,4 @@ const getOwnTickets = async (userId) => {
   return sortedTickets
 }
 
-module.exports = { getCurNumOfTic, getAllTickets, getSpecNumOfTic, getSevenDatesArr, getNumOfTicFLW, getOwnTickets }
+module.exports = { getCurNumOfTic, getAllTickets, getSpecNumOfTic, getSevenDatesArr, getNumOfTicFLW, getRevenueOfTicFLW, getOwnTickets }

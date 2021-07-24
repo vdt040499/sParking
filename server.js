@@ -7,7 +7,7 @@ const session = require('express-session');
 const cors = require('cors');
 const socketio = require('socket.io');
 
-const { getCurNumOfTic, getAllTickets, getSevenDatesArr, getNumOfTicFLW } = require('./utils/ticket')
+const { getCurNumOfTic, getAllTickets, getSevenDatesArr, getNumOfTicFLW, getRevenueOfTicFLW } = require('./utils/ticket')
 
 //Define port
 const port = process.env.PORT;
@@ -53,9 +53,10 @@ io.on('connection', (socket) => {
     const allTickets = await getAllTickets()
     const dateArr = getSevenDatesArr().map(item => `${item.day}/${item.month}`)
     const lastTicketArr = await getNumOfTicFLW()
+    const revTicketArr = await getRevenueOfTicFLW()
     const space = await Space.findOne({ name: 'UIT' });
 
-    callback(users, curTickets, allTickets, dateArr, lastTicketArr, space)
+    callback(users, curTickets, allTickets, dateArr, lastTicketArr, revTicketArr, space)
   })
 
   socket.on('initialApp', () => {
